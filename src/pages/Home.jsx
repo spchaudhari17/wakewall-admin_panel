@@ -159,7 +159,7 @@ export const Home = () => {
         <div className="homePage py-3">
             <div className="container-fluid">
                 <section className="info-card-sec mb-3">
-                    <div className="fs-5 fw-bold mb-2">Dashboard</div>
+                    {/* <div className="fs-5 fw-bold mb-2">Dashboard</div> */}
                     <div className="row g-2 g-md-3">
                         <div className="col-sm-6 col-xl-3">
                             <div className="card-1 bg-white rounded-3 pointer h-100 p-3 py-xl-4">

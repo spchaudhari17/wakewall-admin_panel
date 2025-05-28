@@ -253,8 +253,8 @@ const Header = () => {
                     >
                       <img
                         className="w-100 h-100"
-                        src={require("../assets/images/dummy-user.jpeg")}
-                        // src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy-user.jpeg")}
+                        // src={require("../assets/images/dummy-user.jpeg")}
+                        src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy-user.jpeg")}
                         alt="User"
                         referrerPolicy="no-referrer"
                       />
@@ -262,8 +262,8 @@ const Header = () => {
                   </div>
                   <div className="user-info overflow-hidden">
                     <div className="user-name fw-semibold text-capitalize text-truncate lh-sm">Wakewall</div>
-                    {/* <div className="user-email title-label text-truncate text-lowercase">{user.email}</div> */}
-                    {/* <div className="user-email title-label text-truncate">Role : {user.role}</div> */}
+                    <div className="user-email title-label text-truncate text-lowercase">{user.email}</div>
+                    <div className="user-email title-label text-truncate">Role : {user.role}</div>
                     <div className="title-label">
                       {/* <Link to="" className="btn-link">View account</Link> */}
                     </div>
