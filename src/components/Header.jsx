@@ -232,8 +232,8 @@ const Header = () => {
                   <div className="chip-img bg-primary d-flex align-items-center justify-content-center rounded-circle border border-primary overflow-hidden">
                     <img
                       className="w-100 h-100"
-                      src={require("../assets/images/dummy-user.jpeg")}
-                      // src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy-user.jpeg")}
+                      // src={require("../assets/images/dummy-user.jpeg")}
+                      src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy-user.jpeg")}
                       alt="User"
                     />
                   </div>
