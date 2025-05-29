@@ -121,6 +121,18 @@ export const UsersList = () => {
             minWidth: '200px',
         },
         {
+            name: 'Wall Limit',
+            selector: (row) => row.postLimit || 'N/A',
+            sortable: true,
+            minWidth: '50px',
+        },
+        {
+            name: 'Business Wall Limit',
+            selector: (row) => row.businessPostLimit || 'N/A',
+            sortable: true,
+            minWidth: '50px',
+        },
+        {
             name: 'Note Limit',
             selector: (row) => row.dailyNoteLimit || 'N/A',
             sortable: true,

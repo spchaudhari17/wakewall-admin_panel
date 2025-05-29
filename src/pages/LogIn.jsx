@@ -100,7 +100,7 @@ export const LogIn = () => {
                         {error && <div className="alert alert-danger">{error}</div>}
 
                         <Form.Group className="mb-3" controlId="formBasicEmail">
-                            <Form.Label>Username<span className="text-danger">*</span></Form.Label>
+                            <Form.Label>Email<span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="email"
                                 placeholder="Enter email"
@@ -149,9 +149,9 @@ export const LogIn = () => {
                                     Remember me
                                 </label>
                             </div>
-                            <Link to={'/forgot-password'} className="btn-link fw-medium text-decoration-none">
+                            {/* <Link to={'/forgot-password'} className="btn-link fw-medium text-decoration-none">
                                 Forgot Password
-                            </Link>
+                            </Link> */}
                         </div>
 
                         <Button variant="primary" type="submit" className="btn-custom w-100 mt-2 py-2">

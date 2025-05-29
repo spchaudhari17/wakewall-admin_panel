@@ -75,13 +75,13 @@ export const Home = () => {
 
     const limitedWalls = walls.slice(0, 5);
 
-   
+
     const columns = [
         {
             name: 'S.No',
             selector: (row, index) => index + 1,
             sortable: true,
-            width: '100px',
+            width: '80px',
         },
         {
             name: 'Title',
@@ -93,20 +93,20 @@ export const Home = () => {
             name: 'Details',
             selector: (row) => row.details || 'N/A',
             sortable: true,
-            minWidth: '200px',
+            minWidth: '180px',
         },
         {
             name: 'Username',
             selector: (row) => row.user_id?.username || 'N/A',
             sortable: true,
-            minWidth: '150px',
+            minWidth: '130px',
         },
-        {
-            name: 'Type',
-            selector: (row) => row.media_type || 'N/A',
-            sortable: true,
-            minWidth: '100px',
-        },
+        // {
+        //     name: 'Type',
+        //     selector: (row) => row.media_type || 'N/A',
+        //     sortable: true,
+        //     minWidth: '100px',
+        // },
 
         {
             name: 'Actions',
@@ -250,7 +250,7 @@ export const Home = () => {
                                     <DataTable
                                         columns={columns}
                                         data={limitedWalls}
-                                        selectableRows
+                                        // selectableRows
                                         // striped
                                         dense
                                         pagination
@@ -319,7 +319,7 @@ export const Home = () => {
                                 </Button>
                                 <Button variant="danger" className="px-4 py-2" onClick={deleteWallHandler}>
                                     Delete
-                                </Button> 
+                                </Button>
                             </div>
                         </Modal.Body>
                     </Modal>
