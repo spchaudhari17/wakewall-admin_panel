@@ -31,3 +31,19 @@ export const reviewReport = (reportId, status) => async (dispatch) => {
         dispatch({ type: REVIEW_REPORT_FAIL, payload: error.response?.data?.message || "Failed to update reminder." });
     }
 };
+
+
+
+export const deleteReport = (reportId) => async (dispatch) => {
+   
+
+    try {
+        const { data } = await API.post("/admin/deleteReport", { reportId });
+        dispatch({ type: "DELETE_REPORT_SUCCESS", payload: reportId });
+    } catch (error) {
+        dispatch({
+            type: "DELETE_REPORT_FAILURE",
+            payload: error.response?.data?.message || "Failed to delete note.",
+        });
+    }
+};

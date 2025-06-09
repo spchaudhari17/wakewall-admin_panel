@@ -124,16 +124,23 @@ export const UserDetails = () => {
 
                                 {/* <hr className="border-secondary border-opacity-50" /> */}
 
-                                <BanUnbanControls userDetails={userDetails} userId={id} dispatch={dispatch} />
+                                {userDetails?.role === "admin" && (
+                                    <>
+                                        <BanUnbanControls userDetails={userDetails} userId={id} dispatch={dispatch} />
+                                        <hr className="border-secondary border-opacity-50" />
+                                    </>
+                                )}
 
 
-                                <hr className="border-secondary border-opacity-50" />
+                                {userDetails?.role === "admin" && (
+                                    <>
+                                        <RoleManagement userDetails={userDetails} userId={id} dispatch={dispatch} />
+                                        <hr className="border-secondary border-opacity-50" />
+                                    </>
+                                )}
 
 
-                                <RoleManagement userDetails={userDetails} userId={id} dispatch={dispatch} />
 
-
-                                <hr className="border-secondary border-opacity-50" />
 
                                 <UserNoteLimit userDetails={userDetails} userId={id} dispatch={dispatch} />
 
