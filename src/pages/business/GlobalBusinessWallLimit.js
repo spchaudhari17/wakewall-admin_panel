@@ -1,35 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from "react-toastify";
 import { SetGlobalBusinessWallLimit } from '../../redux/actions/businessAction';
+import API from '../../API';
+import { Loader } from '../../lib/loader';
 
 const GlobalNoteLimit = () => {
     const dispatch = useDispatch();
 
     const [action, setAction] = useState('');
     const [limit, setLimit] = useState('');
+    const [currentLimit, setCurrentLimit] = useState(null); // store current limit
+    const [loading, setLoading] = useState(false);
+
+
+    // Fetch current limit from API
+    const fetchCurrentBusinessLimit = async () => {
+        setLoading(true);
+        try {
+            const res = await API.get('/admin/get-currentbusiness-limit'); // Update endpoint if needed
+            setCurrentLimit(res.data?.data?.currentLimit ?? "Not Found");
+        } catch (error) {
+            console.error("Failed to fetch current limit", error);
+            setCurrentLimit("Error");
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchCurrentBusinessLimit();
+    }, []);
+
+
 
     // Handle action change
     const handleActionChange = (e) => {
         setAction(e.target.value);
-        setLimit(''); 
+        setLimit('');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (action && (action === 'stop' || limit)) {
             console.log(`Action: ${action}, Limit: ${limit || 0}`);
             dispatch(SetGlobalBusinessWallLimit(action, parseInt(limit, 10) || 0));
             toast.success("Update Global Business limit Successfully! ")
+            await fetchCurrentBusinessLimit()
             setAction("");
-            setLimit(''); 
+            setLimit('');
         } else {
             toast.error("Please select an action and provide a valid limit if required.")
         }
     };
 
-   
+
 
     return (
         <div className="set-global-limit-page py-3">
@@ -39,6 +64,15 @@ const GlobalNoteLimit = () => {
                     style={{ maxWidth: '650px' }}
                 >
                     <h3 className="text-center mb-4">Set Global Business Wall Limit</h3>
+
+                    {/* Show current limit */}
+                    <div className="mb-4">
+                        <strong>Current Global Business Limit:</strong>{' '}
+                        {loading ? <Loader /> : <span className="text-primary">{currentLimit}</span>}
+                    </div>
+
+
+
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
                             <label className="form-label">

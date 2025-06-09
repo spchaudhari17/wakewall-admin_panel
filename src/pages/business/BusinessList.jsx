@@ -23,7 +23,7 @@ const BusinessList = () => {
 
     const { loading, error, businesses } = useSelector((state) => state.allBusinesses);
     const { loading: activeUsersLoading, businessUsers } = useSelector((state) => state.businessUserReducer);
-    console.log("businessUsers --- ", businessUsers)
+
 
     const handleClose = () => setShow(false);
 
@@ -206,7 +206,7 @@ const BusinessList = () => {
                 <div className="BusinessList-wrapper bg-white rounded-3 p-3">
                     <div className="heading-wrapper d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <h5 className="fw-bold m-0">All Businesses List - </h5>
-                        <Button variant="success" className='px-3' onClick={addGlobalBusinessWallLimit}><i className="bi bi-person-add fs-18 lh-sm"></i> Add Global Business Wall Limit</Button>
+                        <Button variant="success" className='px-3' onClick={addGlobalBusinessWallLimit}><i className="bi bi-person-add fs-18 lh-sm"></i> Set Global Business Profile Photo Limit </Button>
                         <InputGroup className="search-bar">
                             <InputGroup.Text>
                                 <i className="bi bi-search"></i>

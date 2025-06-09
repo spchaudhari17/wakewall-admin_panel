@@ -1,34 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { SetGlobalNoteLimit } from '../../redux/actions/noteAction';
 import { toast } from "react-toastify";
+import axios from "axios"
+import { Loader } from '../../lib/loader';
+import API from '../../API';
 
 const GlobalNoteLimit = () => {
     const dispatch = useDispatch();
-    // const { successMessage } = useSelector((state) => state.setGlobalNoteLimit);
 
     const [action, setAction] = useState('');
     const [limit, setLimit] = useState('');
+    const [currentLimit, setCurrentLimit] = useState(null); // store current limit
+    const [loading, setLoading] = useState(false);
+
+
+    // Fetch current limit from API
+    const fetchCurrentLimit = async () => {
+        setLoading(true);
+        try {
+            const res = await API.get('/admin/get-currentnote-limit'); // Update endpoint if needed
+            setCurrentLimit(res.data?.data?.currentLimit ?? "Not Found");
+        } catch (error) {
+            console.error("Failed to fetch current limit", error);
+            setCurrentLimit("Error");
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchCurrentLimit();
+    }, []);
 
     // Handle action change
     const handleActionChange = (e) => {
         setAction(e.target.value);
-        setLimit(''); 
+        setLimit('');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async(e) => {
         e.preventDefault();
 
         if (action && (action === 'stop' || limit)) {
-            console.log(`Action: ${action}, Limit: ${limit || 0}`);
             dispatch(SetGlobalNoteLimit(action, parseInt(limit, 10) || 0));
             toast.success("Update Global Note limit Successfully! ")
+            await fetchCurrentLimit();
+            setLimit("")
+            setAction("")
         } else {
             toast.error("Please select an action and provide a valid limit if required.")
         }
     };
 
-   
+
 
     return (
         <div className="set-global-limit-page py-3">
@@ -38,6 +62,15 @@ const GlobalNoteLimit = () => {
                     style={{ maxWidth: '650px' }}
                 >
                     <h3 className="text-center mb-4">Set Global Note Limit</h3>
+
+
+                    {/* Show current limit */}
+                    <div className="mb-4">
+                        <strong>Current Global Note Limit:</strong>{' '}
+                        {loading ? <Loader /> : <span className="text-primary">{currentLimit}</span>}
+                    </div>
+
+
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
                             <label className="form-label">
@@ -80,7 +113,6 @@ const GlobalNoteLimit = () => {
                             </button>
                         </div>
                     </form>
-                    {/* {successMessage && <p className="text-success mt-3">{successMessage}</p>} */}
                 </div>
             </div>
         </div>

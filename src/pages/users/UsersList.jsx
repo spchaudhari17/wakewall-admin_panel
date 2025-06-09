@@ -229,7 +229,7 @@ export const UsersList = () => {
                     <div className="hrading-wrapper d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <h5 className="fw-bold m-0">All Users List - </h5>
                         {/* <Button variant="success" className='px-3' onClick={addNewUser}><i className="bi bi-person-add fs-18 lh-sm"></i> Add User</Button> */}
-                        <Button variant="success" className='px-3' onClick={addGlobalWallLimit}><i className="bi bi-person-add fs-18 lh-sm"></i> Add Global Wall Limit</Button>
+                        <Button variant="success" className='px-3' onClick={addGlobalWallLimit}><i className="bi bi-person-add fs-18 lh-sm"></i> Set Global Profile Photo Limit</Button>
 
                         <InputGroup className="search-bar">
                             <InputGroup.Text>

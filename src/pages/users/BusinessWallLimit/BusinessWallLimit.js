@@ -53,7 +53,7 @@ const BusinessWallLimit = ({ userId, dispatch, userDetails, setUserDetails }) =>
         <div>
             <div className="global-banning mt-4">
                 <div className="heading fs-6 fw-bold text-capitalize mb-3">
-                    User Business Feed Adjustment
+                    User Business Profile Photos Adjustment
                 </div>
 
                 <div className="d-flex gap-3 align-items-center mb-3">

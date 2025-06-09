@@ -18,6 +18,9 @@ import { getAllBusinesses, getBusiness, getBusinessDetails } from '../../redux/a
 export const UserDetails = () => {
     const dispatch = useDispatch()
     const { loading, userDetails, error } = useSelector((state) => state.users);
+
+    console.log("userDetails --- ", userDetails)
+
     const { id } = useParams();
 
 
