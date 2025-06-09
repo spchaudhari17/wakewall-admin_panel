@@ -44,7 +44,9 @@ const GlobalReminderLimit = () => {
         if (action && (action === 'stop' || limit)) {
             console.log(`Action: ${action}, Limit: ${limit || 0}`);
             dispatch(SetGlobalReminderLimit(action, parseInt(limit, 10) || 0));
-            toast.success("Update Global Note limit Successfully! ")
+            toast.success("Update Global Reminder limit Successfully! ")
+
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchCurrentReminderLimit();
             setLimit("")
             setAction("")

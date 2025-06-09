@@ -46,6 +46,8 @@ const GlobalNoteLimit = () => {
             console.log(`Action: ${action}, Limit: ${limit || 0}`);
             dispatch(SetGlobalBusinessWallLimit(action, parseInt(limit, 10) || 0));
             toast.success("Update Global Business limit Successfully! ")
+
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchCurrentBusinessLimit()
             setAction("");
             setLimit('');

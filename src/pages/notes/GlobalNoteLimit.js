@@ -38,12 +38,14 @@ const GlobalNoteLimit = () => {
         setLimit('');
     };
 
-    const handleSubmit = async(e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (action && (action === 'stop' || limit)) {
             dispatch(SetGlobalNoteLimit(action, parseInt(limit, 10) || 0));
             toast.success("Update Global Note limit Successfully! ")
+
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchCurrentLimit();
             setLimit("")
             setAction("")

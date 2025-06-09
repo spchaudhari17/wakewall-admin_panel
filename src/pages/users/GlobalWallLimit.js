@@ -46,6 +46,8 @@ const GlobalWallLimit = () => {
             // dispatch(SetGlobalReminderLimit(action, parseInt(limit, 10) || 0));
             dispatch(SetGlobalWallLimit(action, parseInt(limit, 10) || 0));
             toast.success("Update Global Wall limit Successfully!")
+
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchCurrentUserLimit();
             setLimit("")
             setAction("")

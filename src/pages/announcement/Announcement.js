@@ -12,6 +12,7 @@ const Announcement = () => {
 
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
+    const [type, setType] = useState("");
     const dispatch = useDispatch();
 
     const handleQuillChange = (value) => {
@@ -20,12 +21,16 @@ const Announcement = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        dispatch(sendAllUsersNotification({ title, body }));
+        dispatch(sendAllUsersNotification({ title, body, type}));
         toast.success("Message successfully added to the announcement!", {
             // position: "top-center",
             // theme: "colored",
             // hideProgressBar: true,
         });
+
+        setTitle("")
+        setBody("")
+        setType("")
 
     };
 
@@ -80,6 +85,24 @@ const Announcement = () => {
                                 onChange={(e) => setBody(e.target.value)}
                                 required
                             ></textarea>
+                        </div>
+
+
+                        <div className="mb-3">
+                            <label htmlFor="type" className="form-label">
+                                User Type
+                            </label>
+                            <select
+                                id="country"
+                                className="form-select"
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                required
+                            >
+                                <option value="">Select user type</option>
+                                <option value="User">User</option>
+                                <option value="Business">Business</option>
+                            </select>
                         </div>
 
                         {/* Emoji Picker */}
