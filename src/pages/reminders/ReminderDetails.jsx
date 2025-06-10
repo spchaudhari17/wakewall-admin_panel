@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchReminderDetails, getReminder } from "../../redux/actions/reminderAction";
-import fallbackImage from "../../assets/images/bg-banner1.jpg";
+import fallbackImage from "../../assets/images/no-data.jpg";
 
 const ReminderDetails = () => {
   const dispatch = useDispatch();
@@ -26,10 +26,10 @@ const ReminderDetails = () => {
         <div className="col-md-8">
           <div className="card shadow-lg">
             {/* Image Section */}
-            {reminder?.image && (
+          
               <div className="d-flex justify-content-center p-3" style={{ maxHeight: "300px", overflow: "hidden" }}>
                 <img
-                  src={reminder.image || fallbackImage}
+                  src={reminder?.image || fallbackImage}
                   alt="Reminder"
                   className="img-fluid rounded"
                   style={{
@@ -39,7 +39,7 @@ const ReminderDetails = () => {
                   }}
                 />
               </div>
-            )}
+            
 
             <div className="card-body">
               {loading && (

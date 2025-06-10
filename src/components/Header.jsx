@@ -233,7 +233,7 @@ const Header = () => {
                     <img
                       className="w-100 h-100"
                       // src={require("../assets/images/dummy-user.jpeg")}
-                      src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy-user.jpeg")}
+                      src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy_profile.png")}
                       alt="User"
                     />
                   </div>
@@ -254,7 +254,7 @@ const Header = () => {
                       <img
                         className="w-100 h-100"
                         // src={require("../assets/images/dummy-user.jpeg")}
-                        src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy-user.jpeg")}
+                        src={user.profile_pic ? user.profile_pic : require("../assets/images/dummy_profile.png")}
                         alt="User"
                         referrerPolicy="no-referrer"
                       />

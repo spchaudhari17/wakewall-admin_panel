@@ -2,7 +2,8 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getWall } from "../../redux/actions/wallAction";
-import fallbackImage from "../../assets/images/bg-banner1.jpg";
+import fallbackImage from "../../assets/images/no-data.jpg";
+import dummyUser from "../../assets/images/dummy_profile.png";
 
 const WallDetails = () => {
   const dispatch = useDispatch();
@@ -127,7 +128,7 @@ const WallDetails = () => {
                 <h6 className="mb-3">User Details:</h6>
                 <div className="d-flex align-items-center">
                   <img
-                    src={wall.user_id.profile_pic || fallbackImage}
+                    src={wall.user_id.profile_pic || dummyUser}
                     alt="User"
                     className="rounded-circle me-3"
                     style={{ width: "50px", height: "50px", objectFit: "cover" }}

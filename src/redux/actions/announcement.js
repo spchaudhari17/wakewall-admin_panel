@@ -8,9 +8,9 @@ import {
 } from "../constants/announcementConstanats"
 
 export const sendAllUsersNotification = (notificationData) => async (dispatch) => {
-    dispatch({ type: SEND_NOTIFICATION_REQUEST }); 
+    dispatch({ type: SEND_NOTIFICATION_REQUEST });
     try {
-        const {data} = await API.post('/user/sendAllUsersNotification', notificationData);
+        const { data } = await API.post('/user/sendAllUsersNotification', notificationData);
 
         dispatch({ type: SEND_NOTIFICATION_SUCCESS, payload: data });
     } catch (error) {

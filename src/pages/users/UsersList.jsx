@@ -109,7 +109,7 @@ export const UsersList = () => {
             minWidth: '170px',
             cell: (row) => (
                 <div className='d-flex align-items-center gap-2'>
-                    <img src={row.profile_pic || require('../../assets/images/dummy-user.jpeg')} alt="User" className='img-fluid border border-white rounded-circle shadow' style={{ height: '35px', width: '35px' }} />
+                    <img src={row.profile_pic || require('../../assets/images/dummy_profile.png')} alt="User" className='img-fluid border border-white rounded-circle shadow' style={{ height: '35px', width: '35px' }} />
                     <div className='user-name fw-medium text-capitalize'>{row.username}</div>
                 </div>
             ),

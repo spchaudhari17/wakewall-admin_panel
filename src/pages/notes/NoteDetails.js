@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchNoteDetails, getNote } from "../../redux/actions/noteAction";
-import UserImage from "../../assets/images/dummy-user.jpeg"
+import UserImage from "../../assets/images/no-data.jpg"
 
 const NoteDetails = () => {
   const dispatch = useDispatch();
@@ -24,17 +24,17 @@ const NoteDetails = () => {
           <div className="card shadow-lg">
             {/* Image Section */}
             <div className="d-flex justify-content-center p-3" style={{ maxHeight: "300px", overflow: "hidden" }}>
-                <img
-                   src={note?.image || UserImage}
-                  alt="Note"
-                  className="img-fluid rounded"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
+              <img
+                src={note?.image || UserImage}
+                alt="Note"
+                className="img-fluid rounded"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
 
             <div className="card-body">
               {loading && (

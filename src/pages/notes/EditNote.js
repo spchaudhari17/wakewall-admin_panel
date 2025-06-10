@@ -80,7 +80,7 @@ const EditNode = () => {
                         <Form onSubmit={handleSubmit} className="mt-2 mb-3">
                             <div className="detail-wrapper mb-4">
                                 <div className="node-img bg-primary bg-opacity-25 d-flex align-items-center justify-content-center border border-2 border-primary rounded-circle shadow position-relative mx-auto mb-4" style={{ height: '110px', width: '110px' }}>
-                                    <img src={note?.image || require('../../assets/images/dummy-user.jpeg')} alt="node" className="img-fluid w-100 h-100 rounded-circle object-fit-cover" />
+                                    <img src={note?.image || require('../../assets/images/no-data.jpg')} alt="node" className="img-fluid w-100 h-100 rounded-circle object-fit-cover" />
                                     <Form.Group controlId="uploadImage" className="upload-cover position-absolute end-0 bottom-0 z-1">
                                         <Form.Label className="bg-primary d-flex align-items-center justify-content-center rounded-circle pointer m-1" style={{ height: '30px', width: '30px' }}>
                                             <i className="bi bi-pencil-fill text-white"></i>
