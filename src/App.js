@@ -32,16 +32,12 @@ function App() {
         <>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/" element={
-                        localStorage.getItem('token') ? 
-                        <Navigate to="/dashboard" /> : 
-                        <Navigate to="/login" />} 
-                    />
+                    <Route path="/" element={localStorage.getItem('token') ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
 
                     <Route path="/signup" element={<SignUp />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/login" element={<LogIn />} />
-                    
+
                     {/* Protect all other routes */}
                     <Route path="*" element={
                         <ProtectedRoute>

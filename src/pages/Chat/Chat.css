@@ -1,0 +1,66 @@
+.emoji-mart {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    /* Use full height of the viewport */
+}
+
+.messages-container {
+    flex-grow: 1;
+    /* Take up available space */
+    overflow-y: auto;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    max-height: 70vh;
+    /* Prevent chat from taking up the entire height */
+}
+
+.input-section {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+}
+
+.input-group-append {
+    margin-left: 1rem;
+}
+
+
+/* Start: Support Chat Page CSS */
+.support-chat-page {
+    .sidebar-section {
+        height: 50vh;
+
+        @media(min-width:768px) {
+            height: calc(100vh - 88px);
+        }
+    }
+
+    .chat-window {
+        height: calc(100vh - 88px);
+    }
+
+    .chat-windoww .zoom-wrapper [data-rmiz-ghost] {
+        display: none !important;
+    }
+}
+
+.zoom-wrapper [data-rmiz-ghost] {
+    display: none !important;
+}

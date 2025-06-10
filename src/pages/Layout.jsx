@@ -30,6 +30,7 @@ import Announcement from './announcement/Announcement';
 import GlobalBusinessWallLimit from './business/GlobalBusinessWallLimit';
 import ReportList from './report/reportList';
 import FrequencyList from './Frequency/FrequencyList';
+import Chat from './Chat/Chat';
 
 export const Layout = () => {
 
@@ -84,6 +85,8 @@ export const Layout = () => {
                         <Route path="/report-list" element={<ReportList />} />
 
                         <Route path="/frequency-list" element={<FrequencyList />} />
+
+                        <Route path="/chat" element={<Chat />} />
 
                         <Route path="*" element={<PageNotFound />} />
                     </Routes>

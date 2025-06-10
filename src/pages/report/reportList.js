@@ -6,6 +6,7 @@ import { Loader } from '../../lib/loader';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteReport, getAllReports, reviewReport } from '../../redux/actions/report';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 const ReportList = () => {
     const dispatch = useDispatch();
@@ -26,21 +27,30 @@ const ReportList = () => {
         dispatch(getAllReports()); // Refresh list
     };
 
-    const [show, setShow] = useState(false);
+    // Delete modal state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
 
-    const handleClose = () => setShow(false);
+    // View modal state
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [selectedReport, setSelectedReport] = useState(null);
 
-    const handleShow = (userId) => {
+    const handleCloseDeleteModal = () => setShowDeleteModal(false);
+    const handleShowDeleteModal = (userId) => {
         setSelectedUserId(userId);
-        setShow(true);
+        setShowDeleteModal(true);
     };
 
+    const handleCloseViewModal = () => setShowViewModal(false);
+    const handleShowViewModal = (report) => {
+        setSelectedReport(report);
+        setShowViewModal(true);
+    };
 
     const handleDeleteReport = async () => {
         dispatch(deleteReport(selectedUserId));
-        setShow(false);
-        toast.success("User Deleted Successfully!");
+        setShowDeleteModal(false);
+        toast.success("Report Deleted Successfully!");
         await dispatch(getAllReports());
         setCurrentPage(1)
     };
@@ -86,16 +96,10 @@ const ReportList = () => {
         },
         {
             name: 'Urgent?',
-            selector: (row) => row.is_urgent,
+            selector: (row) => row.is_urgent ? 'Yes' : 'No',
             sortable: true,
             width: '100px',
         },
-        // {
-        //     name: 'Status',
-        //     selector: (row) => row.status,
-        //     sortable: true,
-        //     width: '120px',
-        // },
         {
             name: 'Action',
             cell: (row) => (
@@ -121,19 +125,30 @@ const ReportList = () => {
             sortable: true,
             minWidth: "200px",
         },
-
-
-
         {
             name: 'Actions',
             minWidth: '160px',
             cell: (row) => (
                 <div className='action-wrapper d-flex flex-wrap gap-2'>
-                    <Button variant='outline-danger' className='focus-ring focus-ring-danger rounded-circle' title='Delete' onClick={() => handleShow(row._id)}><i className='bi bi-trash3-fill'></i></Button>
+                    <Button
+                        variant='outline-success'
+                        className='focus-ring focus-ring-success rounded-circle'
+                        title='View'
+                        onClick={() => handleShowViewModal(row)}
+                    >
+                        <i className='bi bi-eye-fill fs-18'></i>
+                    </Button>
+                    <Button
+                        variant='outline-danger'
+                        className='focus-ring focus-ring-danger rounded-circle'
+                        title='Delete'
+                        onClick={() => handleShowDeleteModal(row._id)}
+                    >
+                        <i className='bi bi-trash3-fill'></i>
+                    </Button>
                 </div>
             ),
         },
-
     ];
 
     // Table custom style
@@ -197,7 +212,6 @@ const ReportList = () => {
                             <DataTable
                                 columns={columns}
                                 data={filteredReports || []}
-                                // onRowClicked={reportDetails}
                                 dense
                                 pagination
                                 highlightOnHover
@@ -212,9 +226,8 @@ const ReportList = () => {
                 </div>
             </div>
 
-
             {/* Delete Modal */}
-            <Modal show={show} centered onHide={handleClose}>
+            <Modal show={showDeleteModal} centered onHide={handleCloseDeleteModal}>
                 <Modal.Body className="text-center px-md-5 py-5">
                     <div
                         className="icon-cover d-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle mx-auto mb-3"
@@ -224,7 +237,7 @@ const ReportList = () => {
                     </div>
                     <div className="fs-18 fw-semibold lh-sm mb-3 pb-1">Are you sure you want to delete this report?</div>
                     <div className="btn-wrapper d-flex flex-wrap justify-content-center gap-2">
-                        <Button variant="secondary" className="px-4 py-2" onClick={handleClose}>
+                        <Button variant="secondary" className="px-4 py-2" onClick={handleCloseDeleteModal}>
                             Cancel
                         </Button>
                         <Button variant="danger" className="px-4 py-2" onClick={handleDeleteReport}>
@@ -232,6 +245,66 @@ const ReportList = () => {
                         </Button>
                     </div>
                 </Modal.Body>
+            </Modal>
+
+            {/* View Modal */}
+            <Modal show={showViewModal} centered onHide={handleCloseViewModal} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Report Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedReport && (
+                        <div className="report-details">
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <p><strong>Title:</strong> {selectedReport.title}</p>
+                                </div>
+                                <div className="col-md-6">
+                                    <p><strong>Report ID:</strong> {selectedReport.report_id}</p>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-12">
+                                    <p><strong>Description:</strong></p>
+                                    <div className="border p-3 rounded">
+                                        {selectedReport.description}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <p><strong>Urgent:</strong> {selectedReport.is_urgent ? 'Yes' : 'No'}</p>
+                                </div>
+                                <div className="col-md-6">
+                                    <p><strong>Status:</strong> {selectedReport.status}</p>
+                                </div>
+                            </div>
+
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+
+                                    <p><strong>Report Type:</strong> {selectedReport.report_type}</p>
+                                </div>
+                                <div className="col-md-6">
+                                    <p><strong>Created At:</strong> {new Date(selectedReport.createdAt).toLocaleString()}</p>
+                                </div>
+                            </div>
+
+                            <div className="row mb-3">
+                                <div className="col-12">
+                                    <p><strong>Username:</strong> {selectedReport.user_id?.username || 'N/A'}</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseViewModal}>
+                        Close
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );
