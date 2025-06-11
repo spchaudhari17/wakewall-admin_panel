@@ -252,7 +252,8 @@ const ReportList = () => {
                 <Modal.Header closeButton>
                     <Modal.Title>Report Details</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+
+                {/* <Modal.Body>
                     {selectedReport && (
                         <div className="report-details">
                             <div className="row mb-3">
@@ -291,6 +292,7 @@ const ReportList = () => {
                                 </div>
                             </div>
 
+                            <hr />
                             <div className="row mb-3">
                                 <div className="col-12">
                                     <p><strong>Username:</strong> {selectedReport.user_id?.username || 'N/A'}</p>
@@ -299,13 +301,72 @@ const ReportList = () => {
 
                         </div>
                     )}
+                </Modal.Body> */}
+
+
+                <Modal.Body>
+                    {selectedReport && (
+                        <div className="report-details row">
+                            {/* Left Side - Reporter */}
+                            <div className="col-md-6 border-end">
+                                <h6 className="fw-bold mb-3">Reporter</h6>
+                                <p><strong>Full Name:</strong> {selectedReport.user_id?.full_name || 'N/A'}</p>
+                                <p><strong>Username:</strong> {selectedReport.user_id?.username || 'N/A'}</p>
+                                <p><strong>Email:</strong> {selectedReport.user_id?.email || 'N/A'}</p>
+                                <p><strong>Title:</strong> {selectedReport.title}</p>
+                                <p><strong>Description:</strong></p>
+                                <div className="border p-2 rounded bg-light">{selectedReport.description}</div>
+                                <p className="mt-3"><strong>Is Urgent:</strong> {selectedReport.is_urgent ? 'Yes' : 'No'}</p>
+                                <p><strong>Status:</strong> {selectedReport.status}</p>
+                                <p><strong>Report Type:</strong> {selectedReport.report_type}</p>
+                                <p><strong>Created At:</strong> {new Date(selectedReport.createdAt).toLocaleString()}</p>
+                            </div>
+
+                            {/* Right Side - Reported Against */}
+                            <div className="col-md-6">
+                                <h6 className="fw-bold mb-3">Reported Against</h6>
+                                {selectedReport.report_type === 'user' && selectedReport.reported_user ? (
+                                    <>
+                                        <p><strong>Full Name:</strong> {selectedReport.reported_user.full_name}</p>
+                                        <p><strong>Username:</strong> {selectedReport.reported_user.username}</p>
+                                        <p><strong>User ID:</strong> {selectedReport.reported_user._id}</p>
+                                        <p><strong>Report ID:</strong> {selectedReport.report_id}</p>
+                                        <Link to={`/user-details/${selectedReport.reported_user._id}`} className="text-primary fw-medium fs-12">
+                                            View User Details
+                                        </Link>
+                                    </>
+                                ) : selectedReport.report_type === 'business' && selectedReport.reported_business ? (
+                                    <>
+                                        <p><strong>Business Name:</strong> {selectedReport.reported_business.business_name}</p>
+                                        <p><strong>Username:</strong> {selectedReport.reported_business.business_username}</p>
+                                        <p><strong>Business ID:</strong> {selectedReport.reported_business._id}</p>
+                                        <p><strong>Report ID:</strong> {selectedReport.report_id}</p>
+                                        <Link to={`/business-details/${selectedReport.reported_business._id}`} className="text-primary fw-medium fs-12">
+                                            View Business Details
+                                        </Link>
+                                    </>
+                                ) : (
+                                    <p className="text-muted">No data available</p>
+                                )}
+                                {/* <p><strong>Report ID:</strong> {selectedReport.report_id}</p> */}
+                            </div>
+                        </div>
+                    )}
                 </Modal.Body>
-                <Modal.Footer>
+
+
+
+                {/* <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseViewModal}>
                         Close
                     </Button>
-                </Modal.Footer>
+                </Modal.Footer> */}
+
+
             </Modal>
+
+
+
         </div>
     );
 };

@@ -23,8 +23,6 @@ export const UserDetails = () => {
 
     const { id } = useParams();
 
-
-
     useEffect(() => {
         dispatch(fetchUserDetails(id));
     }, [id, dispatch]);
