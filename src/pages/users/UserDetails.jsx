@@ -19,6 +19,8 @@ export const UserDetails = () => {
     const dispatch = useDispatch()
     const { loading, userDetails, error } = useSelector((state) => state.users);
 
+    const user = JSON.parse(localStorage.getItem('user'));
+
     console.log("userDetails --- ", userDetails)
 
     const { id } = useParams();
@@ -122,7 +124,7 @@ export const UserDetails = () => {
 
                                 {/* <hr className="border-secondary border-opacity-50" /> */}
 
-                                {userDetails?.role === "admin" && (
+                                {user?.role === "admin" && (
                                     <>
                                         <BanUnbanControls userDetails={userDetails} userId={id} dispatch={dispatch} />
                                         <hr className="border-secondary border-opacity-50" />
@@ -130,7 +132,7 @@ export const UserDetails = () => {
                                 )}
 
 
-                                {userDetails?.role === "admin" && (
+                                {user?.role === 'admin' && (
                                     <>
                                         <RoleManagement userDetails={userDetails} userId={id} dispatch={dispatch} />
                                         <hr className="border-secondary border-opacity-50" />

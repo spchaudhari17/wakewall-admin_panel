@@ -35,14 +35,31 @@ export const getAllBusinesses = () => async (dispatch) => {
 };
 
 
+// export const getBusiness = (businessId) => async (dispatch) => {
+//     try {
+//         console.log('businessId : ', businessId);
+//         dispatch({ type: GET_BUSINESS, payload: businessId })
+//     } catch (error) {
+//         console.log(error);
+//     }
+// };
+
 export const getBusiness = (businessId) => async (dispatch) => {
-    try {
-        console.log('businessId : ', businessId);
-        dispatch({ type: GET_BUSINESS, payload: businessId })
-    } catch (error) {
-        console.log(error);
-    }
+
+  try {
+
+    // dispatch({ type: USER_DETAILS_REQUEST });
+    const { data } = await API.post("/admin/businessDetails", { business_id: businessId });
+    console.log("data", data)
+    dispatch({ type: GET_BUSINESS, payload: data.data });
+  } catch (error) {
+    dispatch({
+      type: "BUSINESS_DETAILS_FAILURE",
+      payload: error.response?.data?.message || "Failed to fetch user details", // Dispatch error message
+    });
+  }
 };
+
 
 export const getBusinessDetails = (business_id) => async (dispatch) => {
     try {

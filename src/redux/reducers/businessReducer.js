@@ -45,7 +45,8 @@ export const businessesReducer = (state = initialState, action) => {
         case GET_BUSINESS:
             return {
                 ...state,
-                business: state.businesses.find(business => business._id === action.payload) || {},
+                // business: state.businesses.find(business => business._id === action.payload) || {},
+                business: action.payload,
             };
 
         case UPDATE_BUSINESS_SUCCESS:
@@ -58,11 +59,11 @@ export const businessesReducer = (state = initialState, action) => {
                 business: action.payload,
             };
 
-            case DELETE_BUSINESS_SUCCESS:
-                return {
-                    ...state,
-                    businesses: state.businesses.filter(business => business._id !== action.payload),
-                };
+        case DELETE_BUSINESS_SUCCESS:
+            return {
+                ...state,
+                businesses: state.businesses.filter(business => business._id !== action.payload),
+            };
 
         default:
             return state;
