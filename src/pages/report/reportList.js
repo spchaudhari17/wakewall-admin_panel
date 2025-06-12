@@ -253,55 +253,8 @@ const ReportList = () => {
                     <Modal.Title>Report Details</Modal.Title>
                 </Modal.Header>
 
-                {/* <Modal.Body>
-                    {selectedReport && (
-                        <div className="report-details">
-                            <div className="row mb-3">
-                                <div className="col-md-6">
-                                    <p><strong>Title:</strong> {selectedReport.title}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <p><strong>Report ID:</strong> {selectedReport.report_id}</p>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-12">
-                                    <p><strong>Description:</strong></p>
-                                    <div className="border p-3 rounded">
-                                        {selectedReport.description}
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div className="row mb-3">
-                                <div className="col-md-6">
-                                    <p><strong>Urgent:</strong> {selectedReport.is_urgent ? 'Yes' : 'No'}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <p><strong>Status:</strong> {selectedReport.status}</p>
-                                </div>
-                            </div>
-
-                            <div className="row mb-3">
-                                <div className="col-md-6">
-
-                                    <p><strong>Report Type:</strong> {selectedReport.report_type}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <p><strong>Created At:</strong> {new Date(selectedReport.createdAt).toLocaleString()}</p>
-                                </div>
-                            </div>
-
-                            <hr />
-                            <div className="row mb-3">
-                                <div className="col-12">
-                                    <p><strong>Username:</strong> {selectedReport.user_id?.username || 'N/A'}</p>
-                                </div>
-                            </div>
-
-                        </div>
-                    )}
-                </Modal.Body> */}
+                
 
 
                 <Modal.Body>
@@ -310,6 +263,7 @@ const ReportList = () => {
                             {/* Left Side - Reporter */}
                             <div className="col-md-6 border-end">
                                 <h6 className="fw-bold mb-3">Reporter</h6>
+
                                 <p><strong>Full Name:</strong> {selectedReport.user_id?.full_name || 'N/A'}</p>
                                 <p><strong>Username:</strong> {selectedReport.user_id?.username || 'N/A'}</p>
                                 <p><strong>Email:</strong> {selectedReport.user_id?.email || 'N/A'}</p>
@@ -330,25 +284,83 @@ const ReportList = () => {
                                         <p><strong>Full Name:</strong> {selectedReport.reported_user.full_name}</p>
                                         <p><strong>Username:</strong> {selectedReport.reported_user.username}</p>
                                         <p><strong>User ID:</strong> {selectedReport.reported_user._id}</p>
-                                        <p><strong>Report ID:</strong> {selectedReport.report_id}</p>
+                                        {/* <p><strong>Report ID:</strong> {selectedReport.report_id}</p> */}
                                         <Link to={`/user-details/${selectedReport.reported_user._id}`} className="text-primary fw-medium fs-12">
                                             View User Details
                                         </Link>
+
+                                        <div className="mb-3">
+                                            <img
+                                                // src={selectedReport.reported_user.profile_pic}
+                                                src={
+                                                    selectedReport.reported_user.profile_pic
+                                                        ? selectedReport.reported_user.profile_pic
+                                                        : require('../../assets/images/dummy_profile.png')
+                                                }
+                                                alt="Reporter"
+                                                className="img-fluid rounded"
+                                                style={{ maxWidth: "150px", height: "auto" }}
+                                            />
+                                        </div>
+
                                     </>
                                 ) : selectedReport.report_type === 'business' && selectedReport.reported_business ? (
                                     <>
                                         <p><strong>Business Name:</strong> {selectedReport.reported_business.business_name}</p>
                                         <p><strong>Username:</strong> {selectedReport.reported_business.business_username}</p>
                                         <p><strong>Business ID:</strong> {selectedReport.reported_business._id}</p>
-                                        <p><strong>Report ID:</strong> {selectedReport.report_id}</p>
+                                        {/* <p><strong>Report ID:</strong> {selectedReport.report_id}</p> */}
                                         <Link to={`/business-details/${selectedReport.reported_business._id}`} className="text-primary fw-medium fs-12">
                                             View Business Details
                                         </Link>
+
+                                        <div className="mb-3">
+                                            <img
+                                                src={
+                                                    selectedReport.reported_business?.profile_pic
+                                                        ? selectedReport.reported_business.profile_pic
+                                                        : require('../../assets/images/dummy_profile.png')
+                                                }
+                                                alt="Reporter"
+                                                className="img-fluid rounded"
+                                                style={{ maxWidth: "150px", height: "auto" }}
+                                            />
+                                        </div>
+                                    </>
+                                ) : selectedReport.report_type === 'wall' && selectedReport.reported_wall ? (
+                                    <>
+                                        <p><strong>Wall Title:</strong> {selectedReport.reported_wall.title}</p>
+                                        <p><strong>Wall Details:</strong></p>
+                                        <div className="border p-2 rounded bg-light">{selectedReport.reported_wall.details}</div>
+                                        <p className="mt-3"><strong>Wall ID:</strong> {selectedReport.reported_wall._id}</p>
+                                        <p><strong>Wall Type:</strong> {selectedReport.reported_wall.wall_type}</p>
+                                        {/* <p><strong>Report ID:</strong> {selectedReport.report_id}</p> */}
+                                        <p><strong>Created By User:</strong> {selectedReport.reported_wall.user_id.username}</p>
+                                        <Link to={`/wall-details/${selectedReport.reported_wall._id}`} className="text-primary fw-medium fs-12">
+                                            View Wall Details
+                                        </Link> <br />
+                                        <Link to={`/user-details/${selectedReport.reported_wall.user_id._id}`} className="text-primary fw-medium fs-12">
+                                            View User Details
+                                        </Link>
+
+                                        <div className="mb-3">
+                                            <img
+                                                // src={selectedReport.reported_wall.file}
+                                                src={
+                                                    selectedReport.reported_wall.file
+                                                        ? selectedReport.reported_wall.file
+                                                        : require('../../assets/images/dummy_profile.png')
+                                                }
+                                                alt="Reporter"
+                                                className="img-fluid rounded"
+                                                style={{ maxWidth: "150px", height: "auto" }}
+                                            />
+                                        </div>
+
                                     </>
                                 ) : (
                                     <p className="text-muted">No data available</p>
                                 )}
-                                {/* <p><strong>Report ID:</strong> {selectedReport.report_id}</p> */}
                             </div>
                         </div>
                     )}
