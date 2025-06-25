@@ -6,10 +6,11 @@ import { Loader } from '../../lib/loader';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteReport, getAllReports, reviewReport } from '../../redux/actions/report';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ReportList = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchText, setSearchText] = useState("");
@@ -184,6 +185,16 @@ const ReportList = () => {
         (report._id?.toString().toLowerCase() || "").includes(searchText.toLowerCase()) // MongoDB _id
     );
 
+
+    const handleChatClick = (userId) => {
+        if (userId) {
+            navigate(`/user-chat?userId=${userId}`);
+        } else {
+            console.error("User ID is missing.");
+            toast.error("User ID is missing for chat.");
+        }
+    };
+
     return (
         <div className="UsersList-page py-3">
             <div className="container-fluid">
@@ -254,7 +265,7 @@ const ReportList = () => {
                 </Modal.Header>
 
 
-                
+
 
 
                 <Modal.Body>
@@ -274,6 +285,19 @@ const ReportList = () => {
                                 <p><strong>Status:</strong> {selectedReport.status}</p>
                                 <p><strong>Report Type:</strong> {selectedReport.report_type}</p>
                                 <p><strong>Created At:</strong> {new Date(selectedReport.createdAt).toLocaleString()}</p>
+                                <Link to={`/user-details/${selectedReport.user_id?._id}`} className="text-primary fw-medium fs-12">
+                                    View User Details
+                                </Link>
+
+                                <Button
+                                    variant='info'
+                                    className='btn-custom px-4 d-flex align-items-center justify-content-center gap-2'
+                                    style={{ minWidth: '150px' }}
+                                    onClick={() => handleChatClick(selectedReport.user_id?._id)}
+                                >
+                                    <i className='bi bi-chat-dots-fill' style={{ fontSize: '1.2rem' }}></i> Chat
+                                </Button>
+
                             </div>
 
                             {/* Right Side - Reported Against */}
@@ -307,7 +331,7 @@ const ReportList = () => {
                                 ) : selectedReport.report_type === 'business' && selectedReport.reported_business ? (
                                     <>
                                         <p><strong>Business Name:</strong> {selectedReport.reported_business.business_name}</p>
-                                        <p><strong>Username:</strong> {selectedReport.reported_business.business_username}</p>
+                                        <p><strong>Business Username:</strong> {selectedReport.reported_business.business_username}</p>
                                         <p><strong>Business ID:</strong> {selectedReport.reported_business._id}</p>
                                         {/* <p><strong>Report ID:</strong> {selectedReport.report_id}</p> */}
                                         <Link to={`/business-details/${selectedReport.reported_business._id}`} className="text-primary fw-medium fs-12">
@@ -345,7 +369,7 @@ const ReportList = () => {
 
                                         <div className="mb-3">
                                             <img
-                                                // src={selectedReport.reported_wall.file}
+
                                                 src={
                                                     selectedReport.reported_wall.file
                                                         ? selectedReport.reported_wall.file
@@ -357,6 +381,15 @@ const ReportList = () => {
                                             />
                                         </div>
 
+                                        <Button
+                                            variant='info'
+                                            className='btn-custom px-4 d-flex align-items-center justify-content-center gap-2'
+                                            style={{ minWidth: '150px' }}
+                                            onClick={() => handleChatClick(selectedReport.reported_wall.user_id._id)}
+                                        >
+                                            <i className='bi bi-chat-dots-fill' style={{ fontSize: '1.2rem' }}></i> Chat
+                                        </Button>
+
                                     </>
                                 ) : (
                                     <p className="text-muted">No data available</p>
@@ -365,14 +398,6 @@ const ReportList = () => {
                         </div>
                     )}
                 </Modal.Body>
-
-
-
-                {/* <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseViewModal}>
-                        Close
-                    </Button>
-                </Modal.Footer> */}
 
 
             </Modal>

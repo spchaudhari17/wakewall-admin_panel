@@ -10,8 +10,8 @@ const UserChat = () => {
     const queryParams = new URLSearchParams(location.search);
     const userId = queryParams.get("userId");
 
-    const adminId = "681c0eb3197845464e2c1518"; // ✅ Replace with your real admin UID
-    const adminName = "Admin"; // ✅ Replace with real admin name if needed
+    const adminId = "681c0eb3197845464e2c1518";
+    const adminName = "Admin";
     const adminImage = "https://rlanbucket.s3.us-west-1.amazonaws.com/profile-images/1748513238619_wakewall.png"
 
     const [users, setUsers] = useState([]);
@@ -21,15 +21,14 @@ const UserChat = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [imageName, setImageName] = useState("");
     const [loading, setLoading] = useState(false);
-
     const [searchTerm, setSearchTerm] = useState("");
+    const [chatListData, setChatListData] = useState({});
 
     const chatContainerRef = useRef(null);
 
     // Fetch users from Firestore
     useEffect(() => {
         const usersRef = collection(db, "local", "local_document", "users");
-        // const usersRef = collection(db, "production", "production_document", "users");
         const unsubscribe = onSnapshot(usersRef, (snapshot) => {
             const userList = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -41,29 +40,60 @@ const UserChat = () => {
         return () => unsubscribe();
     }, []);
 
-    console.log("users firebase --", users)
+    console.log("users firebse", users)
 
-    // Fetch messages for selected user
+    // Fetch messages for selected user and mark as read
     useEffect(() => {
         if (!selectedUser) return;
 
         const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
-        // const chatId = adminId > selectedUser ? `${selectedUser}-${adminId}` : `${adminId}-${selectedUser}`;
         const messagesRef = collection(db, "local", "local_document", "chats", chatId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            // const msgs = snapshot.docs.map((doc) => doc.data());
             const msgs = snapshot.docs.map((doc) => ({
-                id: doc.id,         // ✅ Grab messageId
+                id: doc.id,
                 ...doc.data()
             }));
-
             setMessages(msgs);
         });
 
+        // Mark chat as read when opened
+        const markChatAsRead = async () => {
+            const chatListRef = doc(db, "local", "local_document", "chatList", chatId);
+            await setDoc(chatListRef, { 
+                isRead: true,
+                lastReadTime: moment().format("YYYY-MM-DD HH:mm:ss")
+            }, { merge: true });
+        };
+
+        markChatAsRead();
+
         return () => unsubscribe();
     }, [selectedUser]);
+
+    // Track unread messages count
+    useEffect(() => {
+        const chatListRef = collection(db, "local", "local_document", "chatList");
+        const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
+            const data = {};
+            snapshot.forEach((doc) => {
+                const chat = doc.data();
+                const [id1, id2] = doc.id.split("-");
+                const userId = id1 === adminId ? id2 : id1;
+
+                // Count only unread messages not sent by admin
+                if (chat.lastSenderId !== adminId && !chat.isRead) {
+                    data[userId] = (data[userId] || 0) + 1;
+                } else {
+                    data[userId] = 0; // Reset if read or admin's message
+                }
+            });
+            setChatListData(data);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -72,37 +102,14 @@ const UserChat = () => {
         }
     }, [messages]);
 
-
-
-    //Handle send message
     const sendMessage = async () => {
         if (!selectedUser || (!newMessage && !selectedImage)) return;
 
         setLoading(true);
         const receiver = users.find((u) => u.id === selectedUser);
-
-        const chatId =
-            adminId < selectedUser
-                ? `${adminId}-${selectedUser}`
-                : `${selectedUser}-${adminId}`;
-
-        const messagesRef = collection(
-            db,
-            "local",
-            "local_document",
-            "chats",
-            chatId,
-            "messages"
-        );
-
-        const chatListRef = doc(
-            db,
-            "local",
-            "local_document",
-            "chatList",
-            chatId
-        );
-
+        const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
+        const messagesRef = collection(db, "local", "local_document", "chats", chatId, "messages");
+        const chatListRef = doc(db, "local", "local_document", "chatList", chatId);
         const timeNow = moment().format("YYYY-MM-DD HH:mm:ss");
 
         let messagePayload = {
@@ -117,8 +124,6 @@ const UserChat = () => {
             timestamp: timeNow
         };
 
-
-
         try {
             await addDoc(messagesRef, messagePayload);
 
@@ -131,7 +136,7 @@ const UserChat = () => {
                 senderImage: adminImage,
                 receiverName: receiver?.name || "User",
                 receiverImage: receiver?.userProfile || "",
-                isRead: false,
+                isRead: false, // Set to false because user hasn't read it yet
                 type: "UserToUser",
                 deletedBy: ""
             };
@@ -147,6 +152,21 @@ const UserChat = () => {
         setLoading(false);
     };
 
+    const deleteMessage = async (messageId) => {
+        if (!selectedUser || !messageId) return;
+        
+        const chatId = adminId < selectedUser 
+            ? `${adminId}-${selectedUser}`
+            : `${selectedUser}-${adminId}`;
+
+        const messageRef = doc(db, "local", "local_document", "chats", chatId, "messages", messageId);
+
+        try {
+            await deleteDoc(messageRef);
+        } catch (error) {
+            console.error("Failed to delete message:", error);
+        }
+    };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -155,31 +175,6 @@ const UserChat = () => {
             setImageName(file.name);
         }
     };
-
-
-
-
-    const deleteMessage = async (messageId) => {
-        if (!selectedUser || !messageId) {
-            console.log("selectedUser", selectedUser);
-            console.log("messageId", messageId);
-            return;
-        }
-
-        const chatId = adminId < selectedUser
-            ? `${adminId}-${selectedUser}`
-            : `${selectedUser}-${adminId}`;
-
-        const messageRef = doc(db, "local", "local_document", "chats", chatId, "messages", messageId);
-
-        try {
-            await deleteDoc(messageRef);
-            console.log("Message deleted");
-        } catch (error) {
-            console.error("Failed to delete message:", error);
-        }
-    };
-
 
     return (
         <div className="support-chat-page overflow-hidden py-3">
@@ -190,7 +185,6 @@ const UserChat = () => {
                         <div className="sidebar-section bg-light border-end d-flex flex-column p-3">
                             <h6 className="text-primary fw-bold">Users Chats</h6>
 
-                            {/* search users  */}
                             <input
                                 type="text"
                                 className="form-control mb-3"
@@ -198,9 +192,6 @@ const UserChat = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-
-
-
 
                             <div className="list-group-wrapper flex-grow-1 overflow-auto">
                                 <ul className="list-group">
@@ -214,15 +205,18 @@ const UserChat = () => {
                                         .map((user) => (
                                             <li
                                                 key={user.id}
-                                                className={`list-group-item text-capitalize ${selectedUser === user.id ? "active text-white bg-primary" : ""
-                                                    }`}
+                                                className={`list-group-item text-capitalize ${selectedUser === user.id ? "active text-white bg-primary" : ""}`}
                                                 onClick={() => setSelectedUser(user.id)}
                                                 style={{ cursor: "pointer" }}
                                             >
-                                                {user.username || user.email || "Unnamed User"}
+                                                <span>{user.username || user.email || "Unnamed User"}</span>
+                                                {chatListData[user.id] > 0 && (
+                                                    <span className="badge bg-danger rounded-pill ms-2">
+                                                        {chatListData[user.id]}
+                                                    </span>
+                                                )}
                                             </li>
                                         ))}
-
 
                                     {users.filter((user) => {
                                         const name = user.name?.toLowerCase() || "";
@@ -249,8 +243,6 @@ const UserChat = () => {
                                 </h6>
                             </div>
 
-
-                            {/* Messages */}
                             <div
                                 ref={chatContainerRef}
                                 className="messages-wrapper d-flex flex-column gap-3 flex-grow-1 overflow-auto p-3"
@@ -264,7 +256,6 @@ const UserChat = () => {
                                             <div className="fs-12 text-muted mb-1">
                                                 {moment(msg.timestamp).fromNow()}
                                             </div>
-
                                             <div
                                                 className="d-inline-block p-2 rounded shadow-sm"
                                                 style={{
@@ -276,20 +267,20 @@ const UserChat = () => {
                                             >
                                                 {msg.message}
                                             </div>
-
                                             {msg.senderId === adminId && (
-                                                <button onClick={() => deleteMessage(msg.id)} className="btn btn-sm btn-danger ms-2">
+                                                <button 
+                                                    onClick={() => deleteMessage(msg.id)} 
+                                                    className="btn btn-sm btn-danger ms-2"
+                                                >
                                                     ×
                                                 </button>
                                             )}
-
                                         </div>
                                     ))
                                 ) : (
                                     <p className="text-muted text-center">Select a user to view the chat.</p>
                                 )}
                             </div>
-
 
                             {/* Input Section */}
                             {selectedUser && (
@@ -315,8 +306,6 @@ const UserChat = () => {
                                             onChange={(e) => setNewMessage(e.target.value)}
                                             disabled={loading || !!selectedImage}
                                         />
-
-
 
                                         <button
                                             className="btn btn-primary border-0 rounded-0 px-4"

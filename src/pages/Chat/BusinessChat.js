@@ -10,9 +10,9 @@ const BusinessChat = () => {
     const queryParams = new URLSearchParams(location.search);
     const businessId = queryParams.get("businessId");
 
-    const adminId = "681c0eb3197845464e2c1518"; // ✅ Replace with your real admin UID
-    const adminName = "Admin"; // ✅ Replace with real admin name if needed
-    const adminImage = "https://rlanbucket.s3.us-west-1.amazonaws.com/profile-images/1748513238619_wakewall.png"
+    const adminId = "681c0eb3197845464e2c1518";
+    const adminName = "Admin";
+    const adminImage = "https://rlanbucket.s3.us-west-1.amazonaws.com/profile-images/1748513238619_wakewall.png";
 
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(businessId || null);
@@ -21,15 +21,14 @@ const BusinessChat = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [imageName, setImageName] = useState("");
     const [loading, setLoading] = useState(false);
-
     const [searchTerm, setSearchTerm] = useState("");
+    const [chatListData, setChatListData] = useState({});
 
     const chatContainerRef = useRef(null);
 
-    // Fetch users from Firestore
+    // Fetch businesses from Firestore
     useEffect(() => {
         const usersRef = collection(db, "local", "local_document", "business");
-        // const usersRef = collection(db, "production", "production_document", "users");
         const unsubscribe = onSnapshot(usersRef, (snapshot) => {
             const userList = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -41,29 +40,61 @@ const BusinessChat = () => {
         return () => unsubscribe();
     }, []);
 
-    console.log("Business firebase --", users)
-
-    // Fetch messages for selected user
+    // Fetch messages for selected business and mark as read
     useEffect(() => {
         if (!selectedUser) return;
 
         const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
-        // const chatId = adminId > selectedUser ? `${selectedUser}-${adminId}` : `${adminId}-${selectedUser}`;
         const messagesRef = collection(db, "local", "local_document", "chats", chatId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            // const msgs = snapshot.docs.map((doc) => doc.data());
             const msgs = snapshot.docs.map((doc) => ({
-                id: doc.id,         // ✅ Grab messageId
+                id: doc.id,
                 ...doc.data()
             }));
-
             setMessages(msgs);
         });
 
+        // Mark chat as read when opened
+        const markChatAsRead = async () => {
+            const chatListRef = doc(db, "local", "local_document", "chatList", chatId);
+            await setDoc(chatListRef, { 
+                isRead: true,
+                lastReadTime: moment().format("YYYY-MM-DD HH:mm:ss")
+            }, { merge: true });
+        };
+
+        markChatAsRead();
+
         return () => unsubscribe();
     }, [selectedUser]);
+
+    // Track unread messages count
+    useEffect(() => {
+        const chatListRef = collection(db, "local", "local_document", "chatList");
+        const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
+            const data = {};
+            snapshot.forEach((doc) => {
+                const chat = doc.data();
+                const [id1, id2] = doc.id.split("-");
+                const businessId = id1 === adminId ? id2 : id1;
+
+                // Only include business chats
+                if (chat.type === "BusinessToBusiness") {
+                    // Count only unread messages not sent by admin
+                    if (chat.lastSenderId !== adminId && !chat.isRead) {
+                        data[businessId] = (data[businessId] || 0) + 1;
+                    } else {
+                        data[businessId] = 0; // Reset if read or admin's message
+                    }
+                }
+            });
+            setChatListData(data);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -72,37 +103,14 @@ const BusinessChat = () => {
         }
     }, [messages]);
 
-
-
-    //Handle send message
     const sendMessage = async () => {
         if (!selectedUser || (!newMessage && !selectedImage)) return;
 
         setLoading(true);
         const receiver = users.find((u) => u.id === selectedUser);
-
-        const chatId =
-            adminId < selectedUser
-                ? `${adminId}-${selectedUser}`
-                : `${selectedUser}-${adminId}`;
-
-        const messagesRef = collection(
-            db,
-            "local",
-            "local_document",
-            "chats",
-            chatId,
-            "messages"
-        );
-
-        const chatListRef = doc(
-            db,
-            "local",
-            "local_document",
-            "chatList",
-            chatId
-        );
-
+        const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
+        const messagesRef = collection(db, "local", "local_document", "chats", chatId, "messages");
+        const chatListRef = doc(db, "local", "local_document", "chatList", chatId);
         const timeNow = moment().format("YYYY-MM-DD HH:mm:ss");
 
         let messagePayload = {
@@ -112,12 +120,10 @@ const BusinessChat = () => {
             senderName: adminName,
             senderImage: adminImage,
             receiverId: selectedUser,
-            receiverName: receiver?.name || "User",
+            receiverName: receiver?.name || "Business",
             receiverImage: receiver?.userProfile || "",
             timestamp: timeNow
         };
-
-
 
         try {
             await addDoc(messagesRef, messagePayload);
@@ -129,7 +135,7 @@ const BusinessChat = () => {
                 lastReceiverId: selectedUser,
                 senderName: adminName,
                 senderImage: adminImage,
-                receiverName: receiver?.name || "User",
+                receiverName: receiver?.name || "Business",
                 receiverImage: receiver?.userProfile || "",
                 isRead: false,
                 type: "BusinessToBusiness",
@@ -147,6 +153,21 @@ const BusinessChat = () => {
         setLoading(false);
     };
 
+    const deleteMessage = async (messageId) => {
+        if (!selectedUser || !messageId) return;
+        
+        const chatId = adminId < selectedUser 
+            ? `${adminId}-${selectedUser}`
+            : `${selectedUser}-${adminId}`;
+
+        const messageRef = doc(db, "local", "local_document", "chats", chatId, "messages", messageId);
+
+        try {
+            await deleteDoc(messageRef);
+        } catch (error) {
+            console.error("Failed to delete message:", error);
+        }
+    };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -156,31 +177,6 @@ const BusinessChat = () => {
         }
     };
 
-
-
-
-    const deleteMessage = async (messageId) => {
-        if (!selectedUser || !messageId) {
-            console.log("selectedUser", selectedUser);
-            console.log("messageId", messageId);
-            return;
-        }
-
-        const chatId = adminId < selectedUser
-            ? `${adminId}-${selectedUser}`
-            : `${selectedUser}-${adminId}`;
-
-        const messageRef = doc(db, "local", "local_document", "chats", chatId, "messages", messageId);
-
-        try {
-            await deleteDoc(messageRef);
-            console.log("Message deleted");
-        } catch (error) {
-            console.error("Failed to delete message:", error);
-        }
-    };
-
-
     return (
         <div className="support-chat-page overflow-hidden py-3">
             <div className="container-fluid">
@@ -188,50 +184,47 @@ const BusinessChat = () => {
                     {/* Sidebar */}
                     <div className="col-md-4 col-xl-3">
                         <div className="sidebar-section bg-light border-end d-flex flex-column p-3">
-                            <h6 className="text-primary fw-bold">Users Chats</h6>
+                            <h6 className="text-primary fw-bold">Business Chats</h6>
 
-                            {/* search users  */}
                             <input
                                 type="text"
                                 className="form-control mb-3"
-                                placeholder="Search by name or username"
+                                placeholder="Search by business name"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-
-
-
 
                             <div className="list-group-wrapper flex-grow-1 overflow-auto">
                                 <ul className="list-group">
                                     {users
                                         .filter((user) => {
                                             const name = user.name?.toLowerCase() || "";
-                                            const username = user.username?.toLowerCase() || "";
                                             const search = searchTerm.toLowerCase();
-                                            return name.includes(search) || username.includes(search);
+                                            return name.includes(search);
                                         })
                                         .map((user) => (
                                             <li
                                                 key={user.id}
-                                                className={`list-group-item text-capitalize ${selectedUser === user.id ? "active text-white bg-primary" : ""
-                                                    }`}
+                                                className={`list-group-item text-capitalize ${selectedUser === user.id ? "active text-white bg-primary" : ""}`}
                                                 onClick={() => setSelectedUser(user.id)}
                                                 style={{ cursor: "pointer" }}
                                             >
-                                                {user.name || "Unnamed User"}
+                                                <span>{user.name || "Unnamed Business"}</span>
+                                                {chatListData[user.id] > 0 && (
+                                                    <span className="badge bg-danger rounded-pill ms-2">
+                                                        {chatListData[user.id]}
+                                                    </span>
+                                                )}
                                             </li>
                                         ))}
 
-
                                     {users.filter((user) => {
                                         const name = user.name?.toLowerCase() || "";
-                                        const username = user.username?.toLowerCase() || "";
                                         const search = searchTerm.toLowerCase();
-                                        return name.includes(search) || username.includes(search);
+                                        return name.includes(search);
                                     }).length === 0 && (
-                                            <li className="list-group-item text-muted">No users found</li>
-                                        )}
+                                        <li className="list-group-item text-muted">No businesses found</li>
+                                    )}
                                 </ul>
                             </div>
                         </div>
@@ -244,13 +237,11 @@ const BusinessChat = () => {
                                 <h6 className="mb-0">
                                     Chat with:{" "}
                                     {selectedUser
-                                        ? users.find((u) => u.id === selectedUser)?.name || "Unnamed User"
-                                        : "Select a User"}
+                                        ? users.find((u) => u.id === selectedUser)?.name || "Unnamed Business"
+                                        : "Select a Business"}
                                 </h6>
                             </div>
 
-
-                            {/* Messages */}
                             <div
                                 ref={chatContainerRef}
                                 className="messages-wrapper d-flex flex-column gap-3 flex-grow-1 overflow-auto p-3"
@@ -264,7 +255,6 @@ const BusinessChat = () => {
                                             <div className="fs-12 text-muted mb-1">
                                                 {moment(msg.timestamp).fromNow()}
                                             </div>
-
                                             <div
                                                 className="d-inline-block p-2 rounded shadow-sm"
                                                 style={{
@@ -276,20 +266,20 @@ const BusinessChat = () => {
                                             >
                                                 {msg.message}
                                             </div>
-
                                             {msg.senderId === adminId && (
-                                                <button onClick={() => deleteMessage(msg.id)} className="btn btn-sm btn-danger ms-2">
+                                                <button 
+                                                    onClick={() => deleteMessage(msg.id)} 
+                                                    className="btn btn-sm btn-danger ms-2"
+                                                >
                                                     ×
                                                 </button>
                                             )}
-
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-muted text-center">Select a user to view the chat.</p>
+                                    <p className="text-muted text-center">Select a business to view the chat.</p>
                                 )}
                             </div>
-
 
                             {/* Input Section */}
                             {selectedUser && (
@@ -315,8 +305,6 @@ const BusinessChat = () => {
                                             onChange={(e) => setNewMessage(e.target.value)}
                                             disabled={loading || !!selectedImage}
                                         />
-
-
 
                                         <button
                                             className="btn btn-primary border-0 rounded-0 px-4"
