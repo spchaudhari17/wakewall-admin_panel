@@ -28,7 +28,7 @@ const BusinessChat = () => {
 
     // Fetch businesses from Firestore
     useEffect(() => {
-        const usersRef = collection(db, "local", "local_document", "business");
+        const usersRef = collection(db, "production", "production_document", "business");
         const unsubscribe = onSnapshot(usersRef, (snapshot) => {
             const userList = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -40,15 +40,15 @@ const BusinessChat = () => {
         return () => unsubscribe();
     }, []);
 
-    // Fetch messages for selected business and mark as read
+    // Fetch messages and handle read status for selected business
     useEffect(() => {
         if (!selectedUser) return;
 
         const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
-        const messagesRef = collection(db, "local", "local_document", "chats", chatId, "messages");
+        const messagesRef = collection(db, "production", "production_document", "chats", chatId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubscribeMessages = onSnapshot(q, (snapshot) => {
             const msgs = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data()
@@ -56,23 +56,41 @@ const BusinessChat = () => {
             setMessages(msgs);
         });
 
+        // Track chat list changes for read status
+        const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
+        const unsubscribeChatList = onSnapshot(chatListRef, (doc) => {
+            if (doc.exists()) {
+                setChatListData(prev => ({
+                    ...prev,
+                    [selectedUser]: doc.data().lastSenderId !== adminId && !doc.data().isRead ? 1 : 0
+                }));
+            }
+        });
+
         // Mark chat as read when opened
         const markChatAsRead = async () => {
-            const chatListRef = doc(db, "local", "local_document", "chatList", chatId);
-            await setDoc(chatListRef, { 
-                isRead: true,
-                lastReadTime: moment().format("YYYY-MM-DD HH:mm:ss")
-            }, { merge: true });
+            try {
+                await setDoc(chatListRef, { 
+                    isRead: true,
+                    lastReadTime: moment().format("YYYY-MM-DD HH:mm:ss"),
+                    type: "BusinessToBusiness"
+                }, { merge: true });
+            } catch (error) {
+                console.error("Error marking chat as read:", error);
+            }
         };
 
         markChatAsRead();
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeMessages();
+            unsubscribeChatList();
+        };
     }, [selectedUser]);
 
-    // Track unread messages count
+    // Track all chat list data for unread counts
     useEffect(() => {
-        const chatListRef = collection(db, "local", "local_document", "chatList");
+        const chatListRef = collection(db, "production", "production_document", "chatList");
         const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
             const data = {};
             snapshot.forEach((doc) => {
@@ -80,21 +98,23 @@ const BusinessChat = () => {
                 const [id1, id2] = doc.id.split("-");
                 const businessId = id1 === adminId ? id2 : id1;
 
-                // Only include business chats
                 if (chat.type === "BusinessToBusiness") {
+                    // Skip if this is the currently selected chat (handled in other effect)
+                    if (businessId === selectedUser) return;
+                    
                     // Count only unread messages not sent by admin
                     if (chat.lastSenderId !== adminId && !chat.isRead) {
-                        data[businessId] = (data[businessId] || 0) + 1;
+                        data[businessId] = 1; // Show indicator (1) not actual count
                     } else {
-                        data[businessId] = 0; // Reset if read or admin's message
+                        data[businessId] = 0;
                     }
                 }
             });
-            setChatListData(data);
+            setChatListData(prev => ({ ...prev, ...data }));
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [selectedUser]);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -109,8 +129,8 @@ const BusinessChat = () => {
         setLoading(true);
         const receiver = users.find((u) => u.id === selectedUser);
         const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
-        const messagesRef = collection(db, "local", "local_document", "chats", chatId, "messages");
-        const chatListRef = doc(db, "local", "local_document", "chatList", chatId);
+        const messagesRef = collection(db, "production", "production_document", "chats", chatId, "messages");
+        const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
         const timeNow = moment().format("YYYY-MM-DD HH:mm:ss");
 
         let messagePayload = {
@@ -137,12 +157,12 @@ const BusinessChat = () => {
                 senderImage: adminImage,
                 receiverName: receiver?.name || "Business",
                 receiverImage: receiver?.userProfile || "",
-                isRead: false,
+                isRead: false, // Message is unread by receiver
                 type: "BusinessToBusiness",
                 deletedBy: ""
             };
 
-            await setDoc(chatListRef, chatListPayload);
+            await setDoc(chatListRef, chatListPayload, { merge: true });
         } catch (error) {
             console.error("Error sending message:", error);
         }
@@ -160,7 +180,7 @@ const BusinessChat = () => {
             ? `${adminId}-${selectedUser}`
             : `${selectedUser}-${adminId}`;
 
-        const messageRef = doc(db, "local", "local_document", "chats", chatId, "messages", messageId);
+        const messageRef = doc(db, "production", "production_document", "chats", chatId, "messages", messageId);
 
         try {
             await deleteDoc(messageRef);
