@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getWall } from "../../redux/actions/wallAction";
 import fallbackImage from "../../assets/images/no-data.jpg";
@@ -140,6 +140,9 @@ const WallDetails = () => {
                     <p className="mb-0">
                       <strong>Username:</strong> {wall.user_id.username || "N/A"}
                     </p>
+                    <Link to={`/user-details/${wall?.user_id?._id}`} className="text-primary fw-medium fs-12">
+                      View User Details
+                    </Link>
                   </div>
                 </div>
               </div>

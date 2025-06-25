@@ -119,9 +119,18 @@ const Sidebar = (props) => {
                 </li>
 
                 <li className="nav-item">
-                    <Link to={'/chat'} className={`${activepage === 'chat' ? 'active' : ' '} nav-link d-flex align-items-center gap-2`} onClick={() => closeSidebar('chat')}>
+                    <Link to={'/user-chat'} className={`${activepage === 'user-chat' ? 'active' : ' '} nav-link d-flex align-items-center gap-2`} onClick={() => closeSidebar('user-chat')}>
                            <i className="bi bi-chat-dots"></i>
-                        <span>Chat</span>
+            
+                        <span>User Chat</span>
+                    </Link>
+                </li>
+
+                <li className="nav-item">
+                    <Link to={'/business-chat'} className={`${activepage === 'business-chat' ? 'active' : ' '} nav-link d-flex align-items-center gap-2`} onClick={() => closeSidebar('business-chat')}>
+                           <i className="bi bi-chat-dots"></i>
+                           
+                        <span>Business Chat</span>
                     </Link>
                 </li>
 

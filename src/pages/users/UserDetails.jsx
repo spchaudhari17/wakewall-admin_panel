@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, } from 'react-router-dom';
 import axios from 'axios';
 import { useDispatch, useSelector } from "react-redux"
 import RoleManagement from './RoleManagement/RoleManagement';
@@ -14,9 +14,11 @@ import UserPostLimit from './UserPostLimit.js/UserPostLimit';
 import PostLimitUpdater from './UserPostLimit.js/UserPostLimit';
 import BusinessWallLimit from './BusinessWallLimit/BusinessWallLimit';
 import { getAllBusinesses, getBusiness, getBusinessDetails } from '../../redux/actions/businessAction';
+import { Form, Button, Modal } from 'react-bootstrap';
 
 export const UserDetails = () => {
     const dispatch = useDispatch()
+    const navigate = useNavigate();
     const { loading, userDetails, error } = useSelector((state) => state.users);
 
     const user = JSON.parse(localStorage.getItem('user'));
@@ -28,6 +30,15 @@ export const UserDetails = () => {
     useEffect(() => {
         dispatch(fetchUserDetails(id));
     }, [id, dispatch]);
+
+
+    const handleChatClick = () => {
+        if (userDetails?._id) {
+            navigate(`/user-chat?userId=${userDetails._id}`);
+        } else {
+            console.error("User ID is missing.");
+        }
+    };
 
 
     if (loading) {
@@ -107,6 +118,19 @@ export const UserDetails = () => {
                                             <div className="text-secondary">User Type</div>
                                             <div className="text-body text-capitalize">{userDetails.user_type}</div>
                                         </div>
+
+                                        <div className="info-box fs-14 fw-medium">
+                                            <div className="text-secondary">Chat</div>
+                                            <Button
+                                                variant='info'
+                                                className='btn-custom px-4 d-flex align-items-center justify-content-center gap-2'
+                                                style={{ minWidth: '150px' }}
+                                                onClick={handleChatClick}
+                                            >
+                                                <i className='bi bi-chat-dots-fill' style={{ fontSize: '1.2rem' }}></i> Chat
+                                            </Button>
+                                        </div>
+
                                     </div>
                                 </div>
 

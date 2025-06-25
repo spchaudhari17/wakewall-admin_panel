@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getBusiness } from "../../redux/actions/businessAction";
 import PlaceholderImage from "../../assets/images/bg-banner1.jpg"; // Replace with an appropriate placeholder image path
+import { Form, Button, Modal } from 'react-bootstrap';
 
 const BusinessDetails = () => {
   const dispatch = useDispatch();
@@ -21,6 +22,16 @@ const BusinessDetails = () => {
   const navigateUser = () => {
     navigate(`/user-details/${business?.user_id?._id}`)
   }
+
+
+  const handleChatClick = () => {
+    if (business?._id) {
+      navigate(`/business-chat?businessId=${business._id}`);
+    } else {
+      console.error("Business ID is missing.");
+    }
+  };
+
 
   return (
     <div className="container mt-2">
@@ -106,9 +117,22 @@ const BusinessDetails = () => {
                     <p className="mb-3">
                       <strong>Total Bookmarks:</strong> {business?.total_bookmark || 0}
                     </p>
+
+                    <p className="mb-3">
+                      <Button
+                        variant='info'
+                        className='btn-custom px-4 d-flex align-items-center justify-content-center gap-2'
+                        style={{ minWidth: '150px' }}
+                        onClick={handleChatClick}
+                      >
+                        <i className='bi bi-chat-dots-fill' style={{ fontSize: '1.2rem' }}></i> Chat
+                      </Button>
+                    </p>
+
                   </div>
                 </div>
               )}
+
 
               {/* Owner Details */}
               <div className="mt-4">

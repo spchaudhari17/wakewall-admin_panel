@@ -3,14 +3,19 @@ import moment from "moment";
 import { db } from "../../firebaseConfig";
 import { collection, query, orderBy, onSnapshot, addDoc, setDoc, doc, deleteDoc } from "firebase/firestore";
 import "./Chat.css";
+import { useLocation } from "react-router-dom";
 
-const Chat = () => {
+const UserChat = () => {
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const userId = queryParams.get("userId");
+
     const adminId = "681c0eb3197845464e2c1518"; // ✅ Replace with your real admin UID
     const adminName = "Admin"; // ✅ Replace with real admin name if needed
     const adminImage = "https://rlanbucket.s3.us-west-1.amazonaws.com/profile-images/1748513238619_wakewall.png"
 
     const [users, setUsers] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(userId || null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [selectedImage, setSelectedImage] = useState(null);
@@ -112,7 +117,7 @@ const Chat = () => {
             timestamp: timeNow
         };
 
-        
+
 
         try {
             await addDoc(messagesRef, messagePayload);
@@ -331,4 +336,4 @@ const Chat = () => {
     );
 };
 
-export default Chat;
+export default UserChat;
