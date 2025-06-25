@@ -31,6 +31,7 @@ import GlobalBusinessWallLimit from './business/GlobalBusinessWallLimit';
 import ReportList from './report/reportList';
 import FrequencyList from './Frequency/FrequencyList';
 import Chat from './Chat/Chat';
+import AppAnnouncement from './test';
 
 export const Layout = () => {
 
@@ -81,6 +82,7 @@ export const Layout = () => {
                         <Route path="/users-activity" element={<UsersActivityLogs />} />
 
                         <Route path="/app-anouncement" element={<Announcement />} />
+                        <Route path="/test" element={<AppAnnouncement />} />
 
                         <Route path="/report-list" element={<ReportList />} />
 
