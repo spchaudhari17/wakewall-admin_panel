@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import moment from "moment";
 import { db } from "../../firebaseConfig";
-import { collection, query, orderBy, onSnapshot, addDoc, setDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, setDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import "./Chat.css";
 import { useLocation } from "react-router-dom";
 
@@ -18,11 +18,10 @@ const UserChat = () => {
     const [selectedUser, setSelectedUser] = useState(userId || null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [imageName, setImageName] = useState("");
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [chatListData, setChatListData] = useState({});
+    const [sortedUsers, setSortedUsers] = useState([]);
 
     const chatContainerRef = useRef(null);
 
@@ -40,6 +39,39 @@ const UserChat = () => {
         return () => unsubscribe();
     }, []);
 
+    console.log("firebase users", users)
+
+    // Track all chat list data for unread counts and last message time
+    useEffect(() => {
+        const chatListRef = collection(db, "production", "production_document", "chatList");
+        const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
+            const data = {};
+            snapshot.forEach((doc) => {
+                const chat = doc.data();
+                const [id1, id2] = doc.id.split("-");
+                const userId = id1 === adminId ? id2 : id1;
+
+                data[userId] = {
+                    unreadCount: chat.lastSenderId !== adminId && !chat.isRead ? 1 : 0,
+                    lastMessageTime: chat.lastMessageTime || "1970-01-01 00:00:00"
+                };
+            });
+            setChatListData(data);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // Sort users by last message time (newest first)
+    useEffect(() => {
+        const sorted = [...users].sort((a, b) => {
+            const timeA = chatListData[a.id]?.lastMessageTime || "1970-01-01 00:00:00";
+            const timeB = chatListData[b.id]?.lastMessageTime || "1970-01-01 00:00:00";
+            return moment(timeB).valueOf() - moment(timeA).valueOf();
+        });
+        setSortedUsers(sorted);
+    }, [users, chatListData]);
+
     // Fetch messages and handle read status for selected user
     useEffect(() => {
         if (!selectedUser) return;
@@ -54,29 +86,21 @@ const UserChat = () => {
                 ...doc.data()
             }));
             setMessages(msgs);
-
-            
-        });
-
-        // Track chat list changes for read status
-        const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
-        const unsubscribeChatList = onSnapshot(chatListRef, (doc) => {
-            if (doc.exists()) {
-                setChatListData(prev => ({
-                    ...prev,
-                    [selectedUser]: doc.data().lastSenderId !== adminId && !doc.data().isRead ? 1 : 0
-                }));
-            }
         });
 
         // Mark chat as read when opened
         const markChatAsRead = async () => {
             try {
-                await setDoc(chatListRef, { 
+                const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
+
+                // Update only the necessary fields without overwriting others
+                await updateDoc(chatListRef, {
                     isRead: true,
                     lastReadTime: moment().format("YYYY-MM-DD HH:mm:ss"),
-                    type: "UserToUser"
-                }, { merge: true });
+                    // Don't include other fields that shouldn't change
+                });
+
+                console.log("Chat marked as read successfully");
             } catch (error) {
                 console.error("Error marking chat as read:", error);
             }
@@ -86,34 +110,7 @@ const UserChat = () => {
 
         return () => {
             unsubscribeMessages();
-            unsubscribeChatList();
         };
-    }, [selectedUser]);
-
-    // Track all chat list data for unread counts
-    useEffect(() => {
-        const chatListRef = collection(db, "production", "production_document", "chatList");
-        const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
-            const data = {};
-            snapshot.forEach((doc) => {
-                const chat = doc.data();
-                const [id1, id2] = doc.id.split("-");
-                const userId = id1 === adminId ? id2 : id1;
-
-                // Skip if this is the currently selected chat (handled in other effect)
-                if (userId === selectedUser) return;
-                
-                // Count only unread messages not sent by admin
-                if (chat.lastSenderId !== adminId && !chat.isRead) {
-                    data[userId] = 1; // Show indicator (1) not actual count
-                } else {
-                    data[userId] = 0;
-                }
-            });
-            setChatListData(prev => ({ ...prev, ...data }));
-        });
-
-        return () => unsubscribe();
     }, [selectedUser]);
 
     // Scroll to bottom on new messages
@@ -124,7 +121,7 @@ const UserChat = () => {
     }, [messages]);
 
     const sendMessage = async () => {
-        if (!selectedUser || (!newMessage && !selectedImage)) return;
+        if (!selectedUser || !newMessage.trim()) return;
 
         setLoading(true);
         const receiver = users.find((u) => u.id === selectedUser);
@@ -133,8 +130,8 @@ const UserChat = () => {
         const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
         const timeNow = moment().format("YYYY-MM-DD HH:mm:ss");
 
-        let messagePayload = {
-            message: newMessage,
+        const messagePayload = {
+            message: newMessage.trim(),
             msgType: "text",
             senderId: adminId,
             senderName: adminName,
@@ -157,7 +154,7 @@ const UserChat = () => {
                 senderImage: adminImage,
                 receiverName: receiver?.name || "User",
                 receiverImage: receiver?.userProfile || "",
-                isRead: false, // Message is unread by receiver
+                isRead: false,
                 type: "UserToUser",
                 deletedBy: ""
             };
@@ -165,18 +162,16 @@ const UserChat = () => {
             await setDoc(chatListRef, chatListPayload, { merge: true });
         } catch (error) {
             console.error("Error sending message:", error);
+        } finally {
+            setNewMessage("");
+            setLoading(false);
         }
-
-        setNewMessage("");
-        setSelectedImage(null);
-        setImageName("");
-        setLoading(false);
     };
 
     const deleteMessage = async (messageId) => {
         if (!selectedUser || !messageId) return;
-        
-        const chatId = adminId < selectedUser 
+
+        const chatId = adminId < selectedUser
             ? `${adminId}-${selectedUser}`
             : `${selectedUser}-${adminId}`;
 
@@ -186,14 +181,6 @@ const UserChat = () => {
             await deleteDoc(messageRef);
         } catch (error) {
             console.error("Failed to delete message:", error);
-        }
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedImage(file);
-            setImageName(file.name);
         }
     };
 
@@ -216,7 +203,7 @@ const UserChat = () => {
 
                             <div className="list-group-wrapper flex-grow-1 overflow-auto">
                                 <ul className="list-group">
-                                    {users
+                                    {sortedUsers
                                         .filter((user) => {
                                             const name = user.name?.toLowerCase() || "";
                                             const username = user.username?.toLowerCase() || "";
@@ -231,15 +218,15 @@ const UserChat = () => {
                                                 style={{ cursor: "pointer" }}
                                             >
                                                 <span>{user.username || user.email || "Unnamed User"}</span>
-                                                {chatListData[user.id] > 0 && (
+                                                {chatListData[user.id]?.unreadCount > 0 && (
                                                     <span className="badge bg-danger rounded-pill ms-2">
-                                                        {chatListData[user.id]}
+                                                        {chatListData[user.id].unreadCount}
                                                     </span>
                                                 )}
                                             </li>
                                         ))}
 
-                                    {users.filter((user) => {
+                                    {sortedUsers.filter((user) => {
                                         const name = user.name?.toLowerCase() || "";
                                         const username = user.username?.toLowerCase() || "";
                                         const search = searchTerm.toLowerCase();
@@ -289,8 +276,8 @@ const UserChat = () => {
                                                 {msg.message}
                                             </div>
                                             {msg.senderId === adminId && (
-                                                <button 
-                                                    onClick={() => deleteMessage(msg.id)} 
+                                                <button
+                                                    onClick={() => deleteMessage(msg.id)}
                                                     className="btn btn-sm btn-danger ms-2"
                                                 >
                                                     ×
@@ -306,18 +293,6 @@ const UserChat = () => {
                             {/* Input Section */}
                             {selectedUser && (
                                 <div className="bg-white border-top p-3">
-                                    {selectedImage && (
-                                        <div className="text-muted small mb-2">
-                                            Selected file: {imageName}{" "}
-                                            <button
-                                                className="btn btn-sm btn-link"
-                                                onClick={() => setSelectedImage(null)}
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-                                    )}
-
                                     <div className="d-flex border rounded-3 overflow-hidden">
                                         <input
                                             type="text"
@@ -325,13 +300,12 @@ const UserChat = () => {
                                             placeholder="Type a message..."
                                             value={newMessage}
                                             onChange={(e) => setNewMessage(e.target.value)}
-                                            disabled={loading || !!selectedImage}
+                                            disabled={loading}
                                         />
-
                                         <button
                                             className="btn btn-primary border-0 rounded-0 px-4"
                                             onClick={sendMessage}
-                                            disabled={loading}
+                                            disabled={loading || !newMessage.trim()}
                                         >
                                             {loading ? "Sending..." : "Send"}
                                         </button>

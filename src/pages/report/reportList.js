@@ -195,6 +195,15 @@ const ReportList = () => {
         }
     };
 
+    const handleChatClickBusiness = (userId) => {
+        if (userId) {
+            navigate(`/business-chat?businessId=${userId}`);
+        } else {
+            console.error("User ID is missing.");
+            toast.error("User ID is missing for chat.");
+        }
+    };
+
     return (
         <div className="UsersList-page py-3">
             <div className="container-fluid">
@@ -327,6 +336,16 @@ const ReportList = () => {
                                             />
                                         </div>
 
+
+                                        <Button
+                                            variant='info'
+                                            className='btn-custom px-4 d-flex align-items-center justify-content-center gap-2'
+                                            style={{ minWidth: '150px' }}
+                                            onClick={() => handleChatClick(selectedReport.reported_user._id)}
+                                        >
+                                            <i className='bi bi-chat-dots-fill' style={{ fontSize: '1.2rem' }}></i> Chat
+                                        </Button>
+
                                     </>
                                 ) : selectedReport.report_type === 'business' && selectedReport.reported_business ? (
                                     <>
@@ -350,6 +369,16 @@ const ReportList = () => {
                                                 style={{ maxWidth: "150px", height: "auto" }}
                                             />
                                         </div>
+
+                                        <Button
+                                            variant='info'
+                                            className='btn-custom px-4 d-flex align-items-center justify-content-center gap-2'
+                                            style={{ minWidth: '150px' }}
+                                            onClick={() => handleChatClickBusiness(selectedReport.reported_business._id)}
+                                        >
+                                            <i className='bi bi-chat-dots-fill' style={{ fontSize: '1.2rem' }}></i> Chat
+                                        </Button>
+
                                     </>
                                 ) : selectedReport.report_type === 'wall' && selectedReport.reported_wall ? (
                                     <>

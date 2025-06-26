@@ -11,7 +11,8 @@ const BusinessDetails = () => {
   const { id } = useParams();
 
   const { business, loading, error } = useSelector((state) => state.allBusinesses);
-  console.log(business)
+  console.log("business user id", business?.user_id);
+
 
   useEffect(() => {
     if (id) {
@@ -151,12 +152,12 @@ const BusinessDetails = () => {
                   />
                   <div>
                     <p className="mb-1">
-                      <strong>Business Owner Name:</strong> {business?.user_id?.full_name || "N/A"}
+                      <strong>Business Owner Name:</strong> {business?.user_details?.full_name || "N/A"}
                     </p>
                     <p className="mb-0">
-                      <strong>Email:</strong> {business?.user_id?.email || "N/A"}
+                      <strong>Email:</strong> {business?.user_details?.email || "N/A"}
                     </p>
-                    <Link to={`/user-details/${business?.user_id?._id}`} className="text-primary fw-medium fs-12">
+                    <Link to={`/user-details/${business?.user_id}`} className="text-primary fw-medium fs-12">
                       View User Details
                     </Link>
                   </div>

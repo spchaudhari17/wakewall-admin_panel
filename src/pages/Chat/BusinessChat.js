@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import moment from "moment";
 import { db } from "../../firebaseConfig";
-import { collection, query, orderBy, onSnapshot, addDoc, setDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, setDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import "./Chat.css";
 import { useLocation } from "react-router-dom";
 
@@ -14,37 +14,72 @@ const BusinessChat = () => {
     const adminName = "Admin";
     const adminImage = "https://rlanbucket.s3.us-west-1.amazonaws.com/profile-images/1748513238619_wakewall.png";
 
-    const [users, setUsers] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(businessId || null);
+    const [businesses, setBusinesses] = useState([]);
+    const [selectedBusiness, setSelectedBusiness] = useState(businessId || null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [imageName, setImageName] = useState("");
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [chatListData, setChatListData] = useState({});
+    const [sortedBusinesses, setSortedBusinesses] = useState([]);
 
     const chatContainerRef = useRef(null);
 
     // Fetch businesses from Firestore
     useEffect(() => {
-        const usersRef = collection(db, "production", "production_document", "business");
-        const unsubscribe = onSnapshot(usersRef, (snapshot) => {
-            const userList = snapshot.docs.map((doc) => ({
+        const businessesRef = collection(db, "production", "production_document", "business");
+        const unsubscribe = onSnapshot(businessesRef, (snapshot) => {
+            const businessList = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             }));
-            setUsers(userList);
+            setBusinesses(businessList);
         });
 
         return () => unsubscribe();
     }, []);
 
+    console.log("businesses firestore", businesses)
+
+    // Track all chat list data for unread counts and last message time
+    useEffect(() => {
+        const chatListRef = collection(db, "production", "production_document", "chatList");
+        const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
+            const data = {};
+            snapshot.forEach((doc) => {
+                const chat = doc.data();
+                const [id1, id2] = doc.id.split("-");
+                const businessId = id1 === adminId ? id2 : id1;
+
+                // Only include business chats
+              
+                    data[businessId] = {
+                        unreadCount: chat.lastSenderId !== adminId && !chat.isRead ? 1 : 0,
+                        lastMessageTime: chat.lastMessageTime || "1970-01-01 00:00:00"
+                    };
+                
+            });
+            setChatListData(data);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // Sort businesses by last message time (newest first)
+    useEffect(() => {
+        const sorted = [...businesses].sort((a, b) => {
+            const timeA = chatListData[a.id]?.lastMessageTime || "1970-01-01 00:00:00";
+            const timeB = chatListData[b.id]?.lastMessageTime || "1970-01-01 00:00:00";
+            return moment(timeB).valueOf() - moment(timeA).valueOf();
+        });
+        setSortedBusinesses(sorted);
+    }, [businesses, chatListData]);
+
     // Fetch messages and handle read status for selected business
     useEffect(() => {
-        if (!selectedUser) return;
+        if (!selectedBusiness) return;
 
-        const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
+        const chatId = adminId < selectedBusiness ? `${adminId}-${selectedBusiness}` : `${selectedBusiness}-${adminId}`;
         const messagesRef = collection(db, "production", "production_document", "chats", chatId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"));
 
@@ -56,27 +91,21 @@ const BusinessChat = () => {
             setMessages(msgs);
         });
 
-        // Track chat list changes for read status
-        const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
-        const unsubscribeChatList = onSnapshot(chatListRef, (doc) => {
-            if (doc.exists()) {
-                setChatListData(prev => ({
-                    ...prev,
-                    [selectedUser]: doc.data().lastSenderId !== adminId && !doc.data().isRead ? 1 : 0
-                }));
-            }
-        });
-
         // Mark chat as read when opened
         const markChatAsRead = async () => {
             try {
-                await setDoc(chatListRef, { 
+                const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
+
+                // Update only the necessary fields without overwriting others
+                await updateDoc(chatListRef, {
                     isRead: true,
                     lastReadTime: moment().format("YYYY-MM-DD HH:mm:ss"),
-                    type: "BusinessToBusiness"
-                }, { merge: true });
+                    // type: "BusinessToBusiness"
+                });
+
+                console.log("Business chat marked as read successfully");
             } catch (error) {
-                console.error("Error marking chat as read:", error);
+                console.error("Error marking business chat as read:", error);
             }
         };
 
@@ -84,37 +113,8 @@ const BusinessChat = () => {
 
         return () => {
             unsubscribeMessages();
-            unsubscribeChatList();
         };
-    }, [selectedUser]);
-
-    // Track all chat list data for unread counts
-    useEffect(() => {
-        const chatListRef = collection(db, "production", "production_document", "chatList");
-        const unsubscribe = onSnapshot(chatListRef, (snapshot) => {
-            const data = {};
-            snapshot.forEach((doc) => {
-                const chat = doc.data();
-                const [id1, id2] = doc.id.split("-");
-                const businessId = id1 === adminId ? id2 : id1;
-
-                if (chat.type === "BusinessToBusiness") {
-                    // Skip if this is the currently selected chat (handled in other effect)
-                    if (businessId === selectedUser) return;
-                    
-                    // Count only unread messages not sent by admin
-                    if (chat.lastSenderId !== adminId && !chat.isRead) {
-                        data[businessId] = 1; // Show indicator (1) not actual count
-                    } else {
-                        data[businessId] = 0;
-                    }
-                }
-            });
-            setChatListData(prev => ({ ...prev, ...data }));
-        });
-
-        return () => unsubscribe();
-    }, [selectedUser]);
+    }, [selectedBusiness]);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -124,24 +124,24 @@ const BusinessChat = () => {
     }, [messages]);
 
     const sendMessage = async () => {
-        if (!selectedUser || (!newMessage && !selectedImage)) return;
+        if (!selectedBusiness || !newMessage.trim()) return;
 
         setLoading(true);
-        const receiver = users.find((u) => u.id === selectedUser);
-        const chatId = adminId < selectedUser ? `${adminId}-${selectedUser}` : `${selectedUser}-${adminId}`;
+        const receiver = businesses.find((b) => b.id === selectedBusiness);
+        const chatId = adminId < selectedBusiness ? `${adminId}-${selectedBusiness}` : `${selectedBusiness}-${adminId}`;
         const messagesRef = collection(db, "production", "production_document", "chats", chatId, "messages");
         const chatListRef = doc(db, "production", "production_document", "chatList", chatId);
         const timeNow = moment().format("YYYY-MM-DD HH:mm:ss");
 
-        let messagePayload = {
-            message: newMessage,
+        const messagePayload = {
+            message: newMessage.trim(),
             msgType: "text",
             senderId: adminId,
             senderName: adminName,
             senderImage: adminImage,
-            receiverId: selectedUser,
+            receiverId: selectedBusiness,
             receiverName: receiver?.name || "Business",
-            receiverImage: receiver?.userProfile || "",
+            receiverImage: receiver?.logo || "",
             timestamp: timeNow
         };
 
@@ -152,48 +152,38 @@ const BusinessChat = () => {
                 lastMessage: messagePayload.message,
                 lastMessageTime: timeNow,
                 lastSenderId: adminId,
-                lastReceiverId: selectedUser,
+                lastReceiverId: selectedBusiness,
                 senderName: adminName,
                 senderImage: adminImage,
                 receiverName: receiver?.name || "Business",
-                receiverImage: receiver?.userProfile || "",
-                isRead: false, // Message is unread by receiver
+                receiverImage: receiver?.logo || "",
+                isRead: false,
                 type: "BusinessToBusiness",
                 deletedBy: ""
             };
 
             await setDoc(chatListRef, chatListPayload, { merge: true });
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error sending message to business:", error);
+        } finally {
+            setNewMessage("");
+            setLoading(false);
         }
-
-        setNewMessage("");
-        setSelectedImage(null);
-        setImageName("");
-        setLoading(false);
     };
 
     const deleteMessage = async (messageId) => {
-        if (!selectedUser || !messageId) return;
-        
-        const chatId = adminId < selectedUser 
-            ? `${adminId}-${selectedUser}`
-            : `${selectedUser}-${adminId}`;
+        if (!selectedBusiness || !messageId) return;
+
+        const chatId = adminId < selectedBusiness
+            ? `${adminId}-${selectedBusiness}`
+            : `${selectedBusiness}-${adminId}`;
 
         const messageRef = doc(db, "production", "production_document", "chats", chatId, "messages", messageId);
 
         try {
             await deleteDoc(messageRef);
         } catch (error) {
-            console.error("Failed to delete message:", error);
-        }
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedImage(file);
-            setImageName(file.name);
+            console.error("Failed to delete business message:", error);
         }
     };
 
@@ -216,35 +206,35 @@ const BusinessChat = () => {
 
                             <div className="list-group-wrapper flex-grow-1 overflow-auto">
                                 <ul className="list-group">
-                                    {users
-                                        .filter((user) => {
-                                            const name = user.name?.toLowerCase() || "";
+                                    {sortedBusinesses
+                                        .filter((business) => {
+                                            const name = business.name?.toLowerCase() || "";
                                             const search = searchTerm.toLowerCase();
                                             return name.includes(search);
                                         })
-                                        .map((user) => (
+                                        .map((business) => (
                                             <li
-                                                key={user.id}
-                                                className={`list-group-item text-capitalize ${selectedUser === user.id ? "active text-white bg-primary" : ""}`}
-                                                onClick={() => setSelectedUser(user.id)}
+                                                key={business.id}
+                                                className={`list-group-item text-capitalize ${selectedBusiness === business.id ? "active text-white bg-primary" : ""}`}
+                                                onClick={() => setSelectedBusiness(business.id)}
                                                 style={{ cursor: "pointer" }}
                                             >
-                                                <span>{user.name || "Unnamed Business"}</span>
-                                                {chatListData[user.id] > 0 && (
+                                                <span>{business.name || "Unnamed Business"}</span>
+                                                {chatListData[business.id]?.unreadCount > 0 && (
                                                     <span className="badge bg-danger rounded-pill ms-2">
-                                                        {chatListData[user.id]}
+                                                        {chatListData[business.id].unreadCount}
                                                     </span>
                                                 )}
                                             </li>
                                         ))}
 
-                                    {users.filter((user) => {
-                                        const name = user.name?.toLowerCase() || "";
+                                    {sortedBusinesses.filter((business) => {
+                                        const name = business.name?.toLowerCase() || "";
                                         const search = searchTerm.toLowerCase();
                                         return name.includes(search);
                                     }).length === 0 && (
-                                        <li className="list-group-item text-muted">No businesses found</li>
-                                    )}
+                                            <li className="list-group-item text-muted">No businesses found</li>
+                                        )}
                                 </ul>
                             </div>
                         </div>
@@ -256,8 +246,8 @@ const BusinessChat = () => {
                             <div className="border-bottom p-3 bg-primary text-white">
                                 <h6 className="mb-0">
                                     Chat with:{" "}
-                                    {selectedUser
-                                        ? users.find((u) => u.id === selectedUser)?.name || "Unnamed Business"
+                                    {selectedBusiness
+                                        ? businesses.find((b) => b.id === selectedBusiness)?.name || "Unnamed Business"
                                         : "Select a Business"}
                                 </h6>
                             </div>
@@ -266,7 +256,7 @@ const BusinessChat = () => {
                                 ref={chatContainerRef}
                                 className="messages-wrapper d-flex flex-column gap-3 flex-grow-1 overflow-auto p-3"
                             >
-                                {selectedUser ? (
+                                {selectedBusiness ? (
                                     messages.map((msg, index) => (
                                         <div
                                             key={index}
@@ -287,8 +277,8 @@ const BusinessChat = () => {
                                                 {msg.message}
                                             </div>
                                             {msg.senderId === adminId && (
-                                                <button 
-                                                    onClick={() => deleteMessage(msg.id)} 
+                                                <button
+                                                    onClick={() => deleteMessage(msg.id)}
                                                     className="btn btn-sm btn-danger ms-2"
                                                 >
                                                     ×
@@ -302,20 +292,8 @@ const BusinessChat = () => {
                             </div>
 
                             {/* Input Section */}
-                            {selectedUser && (
+                            {selectedBusiness && (
                                 <div className="bg-white border-top p-3">
-                                    {selectedImage && (
-                                        <div className="text-muted small mb-2">
-                                            Selected file: {imageName}{" "}
-                                            <button
-                                                className="btn btn-sm btn-link"
-                                                onClick={() => setSelectedImage(null)}
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-                                    )}
-
                                     <div className="d-flex border rounded-3 overflow-hidden">
                                         <input
                                             type="text"
@@ -323,13 +301,12 @@ const BusinessChat = () => {
                                             placeholder="Type a message..."
                                             value={newMessage}
                                             onChange={(e) => setNewMessage(e.target.value)}
-                                            disabled={loading || !!selectedImage}
+                                            disabled={loading}
                                         />
-
                                         <button
                                             className="btn btn-primary border-0 rounded-0 px-4"
                                             onClick={sendMessage}
-                                            disabled={loading}
+                                            disabled={loading || !newMessage.trim()}
                                         >
                                             {loading ? "Sending..." : "Send"}
                                         </button>
