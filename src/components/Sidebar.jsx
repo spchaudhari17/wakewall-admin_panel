@@ -105,7 +105,7 @@ const Sidebar = (props) => {
                 </li>
 
                 <li className="nav-item">
-                    <Link to={'/app-anouncement'} className={`${activepage === 'client-list' ? 'active' : ' '} nav-link d-flex align-items-center gap-2`} onClick={() => closeSidebar('app-anouncement')}>
+                    <Link to={'/app-anouncement-list'} className={`${activepage === 'app-anouncement-list' ? 'active' : ' '} nav-link d-flex align-items-center gap-2`} onClick={() => closeSidebar('app-anouncement-list')}>
                         <i class="bi bi-megaphone"></i>
                         <span>App Anouncement</span>
                     </Link>

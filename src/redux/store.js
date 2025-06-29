@@ -13,6 +13,7 @@ import { categoryReducer } from "./reducers/CategoryReducer";
 import { searchReducer } from "./reducers/searchReducer";
 import { reportReducer } from "./reducers/report";
 import { frequencyReducer } from "./reducers/frequencyReducer";
+import { announcementReducer } from "./reducers/announcementReducer";
 
 
 const rootReducer = combineReducers({
@@ -36,7 +37,9 @@ const rootReducer = combineReducers({
   searchReducer,
 
   reports: reportReducer,
-  frequencyReducer:frequencyReducer
+  frequencyReducer:frequencyReducer,
+
+  announcementReducer
 });
 
 const persistConfig = {

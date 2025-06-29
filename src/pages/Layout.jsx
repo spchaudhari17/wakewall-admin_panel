@@ -32,6 +32,7 @@ import ReportList from './report/reportList';
 import FrequencyList from './Frequency/FrequencyList';
 import UserChat from './Chat/UserChat';
 import BusinessChat from './Chat/BusinessChat';
+import AnnouncementList from './announcement/AnnouncementList';
 
 export const Layout = () => {
 
@@ -82,6 +83,7 @@ export const Layout = () => {
                         <Route path="/users-activity" element={<UsersActivityLogs />} />
 
                         <Route path="/app-anouncement" element={<Announcement />} />
+                        <Route path="/app-anouncement-list" element={<AnnouncementList />} />
 
                         <Route path="/report-list" element={<ReportList />} />
 

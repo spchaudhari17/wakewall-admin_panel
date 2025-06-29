@@ -42,7 +42,7 @@ const Announcement = () => {
                     className="card shadow-lg p-4 rounded-lg"
                     style={{ maxWidth: "600px", width: "100%" }}
                 >
-                    <h2 className="text-center mb-4">Create Announcement</h2>
+                    <h2 className="text-center mb-4">Send Announcement</h2>
                     <form onSubmit={handleSubmit}>
                         {/* Title */}
                         <div className="mb-3">
@@ -117,7 +117,7 @@ const Announcement = () => {
 
                         {/* Submit Button */}
                         <button type="submit" className="btn btn-success w-100 mt-5">
-                            Submit
+                            Send Announcement
                         </button>
                     </form>
                 </div>
