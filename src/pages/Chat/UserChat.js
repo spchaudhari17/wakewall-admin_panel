@@ -10,7 +10,8 @@ const UserChat = () => {
     const queryParams = new URLSearchParams(location.search);
     const userId = queryParams.get("userId");
 
-    const adminId = "681c0eb3197845464e2c1518";
+    const adminId = "686220f6fea7d3cd0058fd9f";
+    // const adminId = "681c0eb3197845464e2c1518";
     const adminName = "Admin";
     const adminImage = "https://rlanbucket.s3.us-west-1.amazonaws.com/profile-images/1748513238619_wakewall.png"
 
