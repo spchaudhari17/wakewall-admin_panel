@@ -104,7 +104,7 @@ const Header = () => {
           <Link className="navbar-brand d-flex flex-column d-lg-none align-items-center p-0 px-2 m-0" to="/" >
             <div className="d-flex align-items-center gap-2">
               <div className="left-part">
-                <img className="img-fluid" src={require("../assets/images/logo.png")} alt="Logo" style={{ maxWidth: '44px', maxHeight: '44px' }} />
+                <img className="img-fluid" src={require("../assets/images/wakewall.png")} alt="Logo" style={{ maxWidth: '44px', maxHeight: '44px' }} />
               </div>
               <div className="right-part text-start">
                 <div className="fs-5 fw-semibold text-primary lh-sm">WakeWall</div>
